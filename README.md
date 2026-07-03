@@ -6,7 +6,7 @@ Canal d'acquisition n°1 à moyen terme (43 % du web) — planifié en **v1.x** 
 
 - Réglages : clé publique + clé secrète, vérification de l'installation en un clic.
 - Injection automatique du snippet (`wp_head`, script servi localement pour rester first-party).
-- **Mode « tracking serveur »** (case à cocher) : pageviews envoyées via le SDK PHP en `template_redirect`/`shutdown` — zéro JS, imblocable ; le SDK est embarqué dans le plugin (pas de Composer chez l'utilisateur final).
+- **Mode « tracking serveur »** (case à cocher) : pageviews envoyées via le package cœur [`laboiteacode/webanalytics-php`](../php) en `template_redirect`/`shutdown` — zéro JS, imblocable ; le package est embarqué dans le plugin (pas de Composer chez l'utilisateur final).
 - Exclusions : rôles (admins/éditeurs), URLs, environnement de staging.
 - Événements WooCommerce prêts à l'emploi (commande, ajout panier) — selon demande.
 - i18n FR/EN, publication sur wordpress.org.
