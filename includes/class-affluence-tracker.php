@@ -1,0 +1,142 @@
+<?php
+/**
+ * Mode script : enqueue du tracker local (first-party) et route REST de relais.
+ *
+ * Le fichier assets/wa.js est servi par le site du client, avec data-endpoint
+ * pointant vers la route REST affluence/v1/collect du même site : le hit part
+ * du navigateur vers le domaine du client, puis le serveur le relaie au
+ * service Affluence. Toute la collecte reste first-party, les listes de
+ * blocage par domaine sont inopérantes.
+ *
+ * @package Affluence_Analytics
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Enqueue du tracker et relais REST des hits vers le service.
+ */
+class Affluence_Tracker {
+
+	const HANDLE = 'affluence-analytics';
+
+	/**
+	 * Branche les hooks si le mode script est actif.
+	 */
+	public function __construct() {
+		$settings = affluence_get_settings();
+		if ( ! in_array( $settings['mode'], array( 'script', 'both' ), true ) ) {
+			return;
+		}
+		add_action( 'rest_api_init', array( $this, 'register_collect_route' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_tracker' ) );
+		add_filter( 'script_loader_tag', array( $this, 'add_tracker_attributes' ), 10, 3 );
+	}
+
+	/**
+	 * Enqueue de la copie locale de wa.js (jamais pour les rôles exclus).
+	 *
+	 * @return void
+	 */
+	public function enqueue_tracker() {
+		$settings = affluence_get_settings();
+		if ( '' === $settings['site_key'] || affluence_user_is_excluded() ) {
+			return;
+		}
+		wp_enqueue_script( self::HANDLE, AFFLUENCE_PLUGIN_URL . 'assets/wa.js', array(), AFFLUENCE_VERSION, true );
+		// File d'attente : wa('evenement', {...}) reste appelable avant le chargement du script.
+		wp_add_inline_script( self::HANDLE, 'window.wa=window.wa||function(){(window.wa.q=window.wa.q||[]).push(arguments)};', 'before' );
+	}
+
+	/**
+	 * Ajoute defer + attributs data-* attendus par wa.js sur la balise script.
+	 *
+	 * @param string $tag    Balise script générée.
+	 * @param string $handle Handle du script.
+	 * @param string $src    URL du script.
+	 * @return string
+	 */
+	public function add_tracker_attributes( $tag, $handle, $src ) {
+		if ( self::HANDLE !== $handle ) {
+			return $tag;
+		}
+		$settings   = affluence_get_settings();
+		$attributes = sprintf(
+			' defer data-site="%s" data-endpoint="%s"',
+			esc_attr( $settings['site_key'] ),
+			esc_attr( rest_url( 'affluence/v1/collect' ) )
+		);
+		$paths = affluence_excluded_paths();
+		if ( array() !== $paths ) {
+			$attributes .= sprintf( ' data-exclude="%s"', esc_attr( implode( ',', $paths ) ) );
+		}
+		return str_replace( ' src=', $attributes . ' src=', $tag );
+	}
+
+	/**
+	 * Route REST publique de collecte : POST /wp-json/affluence/v1/collect.
+	 *
+	 * @return void
+	 */
+	public function register_collect_route() {
+		register_rest_route(
+			'affluence/v1',
+			'/collect',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'relay_hit' ),
+				// Endpoint public de collecte, comme /api/v1/collect côté service :
+				// pas de nonce, les garde-fous (clé, rate limit, bots) sont côté service.
+				'permission_callback' => '__return_true',
+			)
+		);
+	}
+
+	/**
+	 * Relaie le corps brut du hit vers {service}/api/v1/collect.
+	 *
+	 * Best-effort et non bloquant : la réponse est toujours 202, le visiteur
+	 * ne doit jamais voir d'erreur. L'IP et le User-Agent d'origine sont
+	 * transmis en en-têtes (X-Forwarded-For, User-Agent) pour que le service
+	 * ne compte pas tous les hits comme venant du serveur WordPress.
+	 *
+	 * @param WP_REST_Request $request Requête REST entrante.
+	 * @return WP_REST_Response
+	 */
+	public function relay_hit( WP_REST_Request $request ) {
+		$response = new WP_REST_Response( (object) array(), 202 );
+
+		$body = $request->get_body();
+		if ( '' === $body || strlen( $body ) > 4096 ) {
+			return $response;
+		}
+
+		$settings = affluence_get_settings();
+		$endpoint = untrailingslashit( $settings['service_url'] ) . '/api/v1/collect';
+
+		$headers = array( 'Content-Type' => 'text/plain' );
+
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		if ( false !== filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			$xff                        = sanitize_text_field( (string) $request->get_header( 'x_forwarded_for' ) );
+			$headers['X-Forwarded-For'] = '' !== $xff ? $xff . ', ' . $ip : $ip;
+		}
+
+		$user_agent = sanitize_text_field( (string) $request->get_header( 'user_agent' ) );
+
+		wp_remote_post(
+			$endpoint,
+			array(
+				'timeout'    => 2,
+				'blocking'   => false,
+				'headers'    => $headers,
+				'body'       => $body,
+				'user-agent' => '' !== $user_agent ? $user_agent : 'AffluenceAnalytics-WordPress/' . AFFLUENCE_VERSION,
+			)
+		);
+
+		return $response;
+	}
+}
