@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name:       Affluence Analytics
- * Plugin URI:        https://app.affluence.fr
- * Description:       Mesure d'audience sans cookies pour WordPress : script first-party, tracking serveur imblocable, ou les deux. Les données de mesure sont envoyées au service Affluence configuré dans les réglages.
+ * Plugin Name:       Quiet Metrics
+ * Plugin URI:        https://quietmetrics.dev
+ * Description:       Mesure d'audience sans cookies pour WordPress : script first-party, tracking serveur imblocable, ou les deux. Les données de mesure sont envoyées au service Quiet Metrics configuré dans les réglages.
  * Version:           1.0.0
  * Requires at least: 5.5
  * Requires PHP:      7.4
@@ -10,34 +10,34 @@
  * Author URI:        https://laboiteacode.fr
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       affluence-analytics
+ * Text Domain:       quiet-metrics
  *
- * @package Affluence_Analytics
+ * @package Quiet_Metrics
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AFFLUENCE_VERSION', '1.0.0' );
-define( 'AFFLUENCE_PLUGIN_FILE', __FILE__ );
-define( 'AFFLUENCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'AFFLUENCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'QUIET_METRICS_VERSION', '1.0.0' );
+define( 'QUIET_METRICS_PLUGIN_FILE', __FILE__ );
+define( 'QUIET_METRICS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'QUIET_METRICS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
-require_once AFFLUENCE_PLUGIN_DIR . 'includes/class-affluence-settings.php';
-require_once AFFLUENCE_PLUGIN_DIR . 'includes/class-affluence-tracker.php';
-require_once AFFLUENCE_PLUGIN_DIR . 'includes/class-affluence-server.php';
+require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-settings.php';
+require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-tracker.php';
+require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-server.php';
 
 /**
  * Réglages par défaut : mode script, administrateurs et éditeurs exclus.
  *
  * @return array<string,mixed>
  */
-function affluence_default_settings() {
+function quiet_metrics_default_settings() {
 	return array(
 		'site_key'       => '',
 		'secret_key'     => '',
-		'service_url'    => 'https://app.affluence.fr',
+		'service_url'    => 'https://app.quietmetrics.dev',
 		'mode'           => 'script',
 		'excluded_roles' => array( 'administrator', 'editor' ),
 		'excluded_paths' => '',
@@ -45,16 +45,16 @@ function affluence_default_settings() {
 }
 
 /**
- * Réglages du plugin, complétés par les défauts (option unique affluence_settings).
+ * Réglages du plugin, complétés par les défauts (option unique quiet_metrics_settings).
  *
  * @return array<string,mixed>
  */
-function affluence_get_settings() {
-	$settings = get_option( 'affluence_settings', array() );
+function quiet_metrics_get_settings() {
+	$settings = get_option( 'quiet_metrics_settings', array() );
 	if ( ! is_array( $settings ) ) {
 		$settings = array();
 	}
-	return wp_parse_args( $settings, affluence_default_settings() );
+	return wp_parse_args( $settings, quiet_metrics_default_settings() );
 }
 
 /**
@@ -62,8 +62,8 @@ function affluence_get_settings() {
  *
  * @return string[]
  */
-function affluence_excluded_paths() {
-	$settings = affluence_get_settings();
+function quiet_metrics_excluded_paths() {
+	$settings = quiet_metrics_get_settings();
 	$paths    = array();
 	foreach ( preg_split( '/\r\n|\r|\n/', (string) $settings['excluded_paths'] ) as $line ) {
 		$line = trim( $line );
@@ -84,8 +84,8 @@ function affluence_excluded_paths() {
  * @param string $path Chemin de la requête (sans query string).
  * @return bool
  */
-function affluence_path_is_excluded( $path ) {
-	foreach ( affluence_excluded_paths() as $prefix ) {
+function quiet_metrics_path_is_excluded( $path ) {
+	foreach ( quiet_metrics_excluded_paths() as $prefix ) {
 		if ( 0 === strpos( (string) $path, $prefix ) ) {
 			return true;
 		}
@@ -98,11 +98,11 @@ function affluence_path_is_excluded( $path ) {
  *
  * @return bool
  */
-function affluence_user_is_excluded() {
+function quiet_metrics_user_is_excluded() {
 	if ( ! is_user_logged_in() ) {
 		return false;
 	}
-	$settings = affluence_get_settings();
+	$settings = quiet_metrics_get_settings();
 	$excluded = (array) $settings['excluded_roles'];
 	foreach ( (array) wp_get_current_user()->roles as $role ) {
 		if ( in_array( $role, $excluded, true ) ) {
@@ -118,17 +118,17 @@ function affluence_user_is_excluded() {
  * Retourne null tant que la clé publique n'est pas renseignée : rien
  * n'est jamais envoyé sans clé.
  *
- * @return \LaBoiteACode\WebAnalytics\Client|null
+ * @return \QuietMetrics\Client|null
  */
-function affluence_client() {
-	$settings = affluence_get_settings();
+function quiet_metrics_client() {
+	$settings = quiet_metrics_get_settings();
 	if ( '' === $settings['site_key'] ) {
 		return null;
 	}
-	if ( ! class_exists( 'LaBoiteACode\\WebAnalytics\\Client' ) ) {
-		require_once AFFLUENCE_PLUGIN_DIR . 'includes/Client.php';
+	if ( ! class_exists( 'QuietMetrics\\Client' ) ) {
+		require_once QUIET_METRICS_PLUGIN_DIR . 'includes/Client.php';
 	}
-	return new \LaBoiteACode\WebAnalytics\Client(
+	return new \QuietMetrics\Client(
 		$settings['site_key'],
 		'' !== $settings['secret_key'] ? $settings['secret_key'] : null,
 		array( 'endpoint' => untrailingslashit( $settings['service_url'] ) . '/api/v1/collect' )
@@ -138,7 +138,7 @@ function affluence_client() {
 /**
  * Événement personnalisé côté serveur, pour les thèmes et plugins :
  *
- *     affluence_event( 'achat', array( 'montant' => 49 ) );
+ *     quiet_metrics_event( 'achat', array( 'montant' => 49 ) );
  *
  * Non bloquant, échecs silencieux : n'impacte jamais le site hôte.
  *
@@ -146,8 +146,8 @@ function affluence_client() {
  * @param array  $props Propriétés scalaires (30 clés max, tronquées côté service).
  * @return void
  */
-function affluence_event( $name, array $props = array() ) {
-	$client = affluence_client();
+function quiet_metrics_event( $name, array $props = array() ) {
+	$client = quiet_metrics_client();
 	if ( null !== $client ) {
 		$client->event( (string) $name, $props );
 	}
@@ -158,20 +158,20 @@ function affluence_event( $name, array $props = array() ) {
  *
  * @return void
  */
-function affluence_activate() {
-	add_option( 'affluence_settings', affluence_default_settings() );
+function quiet_metrics_activate() {
+	add_option( 'quiet_metrics_settings', quiet_metrics_default_settings() );
 }
-register_activation_hook( __FILE__, 'affluence_activate' );
+register_activation_hook( __FILE__, 'quiet_metrics_activate' );
 
 /**
  * Démarrage du plugin : traductions puis composants (réglages, script, serveur).
  *
  * @return void
  */
-function affluence_boot() {
-	load_plugin_textdomain( 'affluence-analytics' );
-	new Affluence_Settings();
-	new Affluence_Tracker();
-	new Affluence_Server();
+function quiet_metrics_boot() {
+	load_plugin_textdomain( 'quiet-metrics' );
+	new Quiet_Metrics_Settings();
+	new Quiet_Metrics_Tracker();
+	new Quiet_Metrics_Server();
 }
-add_action( 'plugins_loaded', 'affluence_boot' );
+add_action( 'plugins_loaded', 'quiet_metrics_boot' );

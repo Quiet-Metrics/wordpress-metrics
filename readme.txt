@@ -1,4 +1,4 @@
-=== Affluence Analytics ===
+=== Quiet Metrics ===
 Contributors: laboiteacode
 Tags: analytics, statistiques, audience, rgpd, privacy
 Requires at least: 5.5
@@ -12,24 +12,24 @@ Mesure d'audience sans cookies pour WordPress : script first-party, tracking ser
 
 == Description ==
 
-Affluence Analytics connecte votre site WordPress au service de mesure d'audience Affluence, édité par La Boîte à Code. La mesure se fait sans cookie et sans stockage chez le visiteur : pas de bannière de consentement dédiée à l'analytics.
+Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quiet Metrics, édité par La Boîte à Code. La mesure se fait sans cookie et sans stockage chez le visiteur : pas de bannière de consentement dédiée à l'analytics.
 
-* **Mode script (first-party)** : le fichier wa.js est une copie locale servie par votre propre site, et les hits transitent par la REST API de votre site (route affluence/v1/collect) avant d'être relayés au service. Aucun domaine tiers côté navigateur.
+* **Mode script (first-party)** : le fichier qm.js est une copie locale servie par votre propre site, et les hits transitent par la REST API de votre site (route quiet-metrics/v1/collect) avant d'être relayés au service. Aucun domaine tiers côté navigateur.
 * **Mode serveur (imblocable)** : les pages vues sont envoyées par PHP en fin de requête, sans JavaScript. Invisible pour les bloqueurs de publicité. Avec la clé secrète, les hits sont signés (HMAC) et le service prend en compte l'IP et le navigateur du visiteur.
 * **Exclusions** : rôles connectés (administrateurs et éditeurs par défaut) et préfixes de chemins (un par ligne).
-* **Événements personnalisés** : wa('inscription', {plan: 'pro'}) côté navigateur, affluence_event('achat', array('montant' => 49)) côté PHP.
+* **Événements personnalisés** : qm('inscription', {plan: 'pro'}) côté navigateur, quiet_metrics_event('achat', array('montant' => 49)) côté PHP.
 
 = Service externe =
 
-Ce plugin envoie les données de mesure au service Affluence configuré dans Réglages > Affluence (par défaut https://app.affluence.fr), sur le endpoint /api/v1/collect. Sont transmis : URL de la page vue, referrer, langue, largeur d'écran (mode script), nom et propriétés d'événement, ainsi que l'adresse IP et le User-Agent du visiteur, utilisés par le service pour la déduction technique (visiteur unique, appareil, pays) puis jetés, jamais stockés en clair.
+Ce plugin envoie les données de mesure au service Quiet Metrics configuré dans Réglages > Quiet Metrics (par défaut https://app.quietmetrics.dev), sur le endpoint /api/v1/collect. Sont transmis : URL de la page vue, referrer, langue, largeur d'écran (mode script), nom et propriétés d'événement, ainsi que l'adresse IP et le User-Agent du visiteur, utilisés par le service pour la déduction technique (visiteur unique, appareil, pays) puis jetés, jamais stockés en clair.
 
-Aucune donnée n'est envoyée tant que la clé publique du site n'est pas renseignée dans les réglages. Éditeur : La Boîte à Code (https://laboiteacode.fr). Service : https://app.affluence.fr.
+Aucune donnée n'est envoyée tant que la clé publique du site n'est pas renseignée dans les réglages. Éditeur : La Boîte à Code (https://laboiteacode.fr). Service : https://app.quietmetrics.dev.
 
 == Installation ==
 
 1. Téléversez le dossier du plugin dans wp-content/plugins/, ou installez-le depuis l'écran Extensions.
-2. Activez « Affluence Analytics ».
-3. Ouvrez Réglages > Affluence et collez la clé publique de votre site (wa_pub_...), disponible dans votre tableau de bord Affluence.
+2. Activez « Quiet Metrics ».
+3. Ouvrez Réglages > Quiet Metrics et collez la clé publique de votre site (qm_pub_...), disponible dans votre tableau de bord Quiet Metrics.
 4. Choisissez le mode de collecte : script, serveur, ou les deux.
 
 == Frequently Asked Questions ==
@@ -54,7 +54,7 @@ Non : le service déduplique les hits identiques rapprochés (même page, même 
 
 = 1.0.0 =
 * Version initiale.
-* Mode script first-party : wa.js servi localement, relais des hits par la route REST affluence/v1/collect.
+* Mode script first-party : qm.js servi localement, relais des hits par la route REST quiet-metrics/v1/collect.
 * Mode serveur : pageviews envoyées en PHP via le SDK embarqué (non bloquant, signé HMAC avec la clé secrète).
 * Réglages : clés, URL du service, mode de collecte, rôles exclus, chemins exclus.
-* Fonction affluence_event() pour les événements personnalisés côté PHP.
+* Fonction quiet_metrics_event() pour les événements personnalisés côté PHP.

@@ -4,20 +4,20 @@
  * chaque site d'un réseau multisite. Aucune autre donnée n'est stockée
  * localement par le plugin.
  *
- * @package Affluence_Analytics
+ * @package Quiet_Metrics
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-delete_option( 'affluence_settings' );
+delete_option( 'quiet_metrics_settings' );
 
 if ( is_multisite() ) {
-	$affluence_site_ids = get_sites( array( 'fields' => 'ids' ) );
-	foreach ( $affluence_site_ids as $affluence_site_id ) {
-		switch_to_blog( (int) $affluence_site_id );
-		delete_option( 'affluence_settings' );
+	$quiet_metrics_site_ids = get_sites( array( 'fields' => 'ids' ) );
+	foreach ( $quiet_metrics_site_ids as $quiet_metrics_site_id ) {
+		switch_to_blog( (int) $quiet_metrics_site_id );
+		delete_option( 'quiet_metrics_settings' );
 		restore_current_blog();
 	}
 }

@@ -1,8 +1,8 @@
 <?php
 /**
- * Page de réglages (Réglages > Affluence), via l'API Settings de WordPress.
+ * Page de réglages (Réglages > Quiet Metrics), via l'API Settings de WordPress.
  *
- * @package Affluence_Analytics
+ * @package Quiet_Metrics
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -12,11 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Enregistre et affiche la page de réglages du plugin.
  */
-class Affluence_Settings {
+class Quiet_Metrics_Settings {
 
-	const OPTION_GROUP = 'affluence_settings_group';
-	const OPTION_NAME  = 'affluence_settings';
-	const PAGE_SLUG    = 'affluence-analytics';
+	const OPTION_GROUP = 'quiet_metrics_settings_group';
+	const OPTION_NAME  = 'quiet_metrics_settings';
+	const PAGE_SLUG    = 'quiet-metrics';
 
 	/**
 	 * Branche les hooks d'administration.
@@ -24,7 +24,7 @@ class Affluence_Settings {
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
-		add_filter( 'plugin_action_links_' . plugin_basename( AFFLUENCE_PLUGIN_FILE ), array( $this, 'action_links' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( QUIET_METRICS_PLUGIN_FILE ), array( $this, 'action_links' ) );
 	}
 
 	/**
@@ -35,19 +35,19 @@ class Affluence_Settings {
 	 */
 	public function action_links( $links ) {
 		$url = admin_url( 'options-general.php?page=' . self::PAGE_SLUG );
-		array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Réglages', 'affluence-analytics' ) . '</a>' );
+		array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Réglages', 'quiet-metrics' ) . '</a>' );
 		return $links;
 	}
 
 	/**
-	 * Entrée de menu : Réglages > Affluence.
+	 * Entrée de menu : Réglages > Quiet Metrics.
 	 *
 	 * @return void
 	 */
 	public function add_settings_page() {
 		add_options_page(
-			__( 'Affluence Analytics', 'affluence-analytics' ),
-			__( 'Affluence', 'affluence-analytics' ),
+			__( 'Quiet Metrics', 'quiet-metrics' ),
+			__( 'Quiet Metrics', 'quiet-metrics' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			array( $this, 'render_page' )
@@ -66,64 +66,64 @@ class Affluence_Settings {
 			array(
 				'type'              => 'array',
 				'sanitize_callback' => array( $this, 'sanitize' ),
-				'default'           => affluence_default_settings(),
+				'default'           => quiet_metrics_default_settings(),
 			)
 		);
 
 		add_settings_section(
-			'affluence_section_service',
-			__( 'Connexion au service', 'affluence-analytics' ),
+			'quiet_metrics_section_service',
+			__( 'Connexion au service', 'quiet-metrics' ),
 			array( $this, 'render_service_section' ),
 			self::PAGE_SLUG
 		);
 		add_settings_field(
-			'affluence_site_key',
-			__( 'Clé publique du site', 'affluence-analytics' ),
+			'quiet_metrics_site_key',
+			__( 'Clé publique du site', 'quiet-metrics' ),
 			array( $this, 'render_site_key_field' ),
 			self::PAGE_SLUG,
-			'affluence_section_service'
+			'quiet_metrics_section_service'
 		);
 		add_settings_field(
-			'affluence_secret_key',
-			__( 'Clé secrète', 'affluence-analytics' ),
+			'quiet_metrics_secret_key',
+			__( 'Clé secrète', 'quiet-metrics' ),
 			array( $this, 'render_secret_key_field' ),
 			self::PAGE_SLUG,
-			'affluence_section_service'
+			'quiet_metrics_section_service'
 		);
 		add_settings_field(
-			'affluence_service_url',
-			__( 'URL du service', 'affluence-analytics' ),
+			'quiet_metrics_service_url',
+			__( 'URL du service', 'quiet-metrics' ),
 			array( $this, 'render_service_url_field' ),
 			self::PAGE_SLUG,
-			'affluence_section_service'
+			'quiet_metrics_section_service'
 		);
 
 		add_settings_section(
-			'affluence_section_collect',
-			__( 'Collecte', 'affluence-analytics' ),
+			'quiet_metrics_section_collect',
+			__( 'Collecte', 'quiet-metrics' ),
 			array( $this, 'render_collect_section' ),
 			self::PAGE_SLUG
 		);
 		add_settings_field(
-			'affluence_mode',
-			__( 'Mode de collecte', 'affluence-analytics' ),
+			'quiet_metrics_mode',
+			__( 'Mode de collecte', 'quiet-metrics' ),
 			array( $this, 'render_mode_field' ),
 			self::PAGE_SLUG,
-			'affluence_section_collect'
+			'quiet_metrics_section_collect'
 		);
 		add_settings_field(
-			'affluence_excluded_roles',
-			__( 'Rôles exclus', 'affluence-analytics' ),
+			'quiet_metrics_excluded_roles',
+			__( 'Rôles exclus', 'quiet-metrics' ),
 			array( $this, 'render_excluded_roles_field' ),
 			self::PAGE_SLUG,
-			'affluence_section_collect'
+			'quiet_metrics_section_collect'
 		);
 		add_settings_field(
-			'affluence_excluded_paths',
-			__( 'Chemins exclus', 'affluence-analytics' ),
+			'quiet_metrics_excluded_paths',
+			__( 'Chemins exclus', 'quiet-metrics' ),
 			array( $this, 'render_excluded_paths_field' ),
 			self::PAGE_SLUG,
-			'affluence_section_collect'
+			'quiet_metrics_section_collect'
 		);
 	}
 
@@ -134,7 +134,7 @@ class Affluence_Settings {
 	 * @return array<string,mixed>
 	 */
 	public function sanitize( $input ) {
-		$defaults = affluence_default_settings();
+		$defaults = quiet_metrics_default_settings();
 		if ( ! is_array( $input ) ) {
 			return $defaults;
 		}
@@ -165,7 +165,7 @@ class Affluence_Settings {
 	 * @return void
 	 */
 	public function render_service_section() {
-		echo '<p>' . esc_html__( 'Les clés du site se trouvent dans votre tableau de bord Affluence (réglages du site). Les données de mesure sont envoyées au service configuré ci-dessous, sur le endpoint /api/v1/collect.', 'affluence-analytics' ) . '</p>';
+		echo '<p>' . esc_html__( 'Les clés du site se trouvent dans votre tableau de bord Quiet Metrics (réglages du site). Les données de mesure sont envoyées au service configuré ci-dessous, sur le endpoint /api/v1/collect.', 'quiet-metrics' ) . '</p>';
 	}
 
 	/**
@@ -174,7 +174,7 @@ class Affluence_Settings {
 	 * @return void
 	 */
 	public function render_collect_section() {
-		echo '<p>' . esc_html__( 'Le mode script charge un fichier wa.js servi par votre propre site (first-party). Le mode serveur envoie les pages vues en PHP, sans JavaScript : il est invisible pour les bloqueurs.', 'affluence-analytics' ) . '</p>';
+		echo '<p>' . esc_html__( 'Le mode script charge un fichier qm.js servi par votre propre site (first-party). Le mode serveur envoie les pages vues en PHP, sans JavaScript : il est invisible pour les bloqueurs.', 'quiet-metrics' ) . '</p>';
 	}
 
 	/**
@@ -183,13 +183,13 @@ class Affluence_Settings {
 	 * @return void
 	 */
 	public function render_site_key_field() {
-		$settings = affluence_get_settings();
+		$settings = quiet_metrics_get_settings();
 		printf(
-			'<input type="text" class="regular-text code" name="%s[site_key]" value="%s" placeholder="wa_pub_..." autocomplete="off" />',
+			'<input type="text" class="regular-text code" name="%s[site_key]" value="%s" placeholder="qm_pub_..." autocomplete="off" />',
 			esc_attr( self::OPTION_NAME ),
 			esc_attr( $settings['site_key'] )
 		);
-		echo '<p class="description">' . esc_html__( 'Obligatoire. Rien n\'est envoyé tant que cette clé est vide.', 'affluence-analytics' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Obligatoire. Rien n\'est envoyé tant que cette clé est vide.', 'quiet-metrics' ) . '</p>';
 	}
 
 	/**
@@ -198,13 +198,13 @@ class Affluence_Settings {
 	 * @return void
 	 */
 	public function render_secret_key_field() {
-		$settings = affluence_get_settings();
+		$settings = quiet_metrics_get_settings();
 		printf(
-			'<input type="password" class="regular-text code" name="%s[secret_key]" value="%s" placeholder="wa_sec_..." autocomplete="new-password" />',
+			'<input type="password" class="regular-text code" name="%s[secret_key]" value="%s" placeholder="qm_sec_..." autocomplete="new-password" />',
 			esc_attr( self::OPTION_NAME ),
 			esc_attr( $settings['secret_key'] )
 		);
-		echo '<p class="description">' . esc_html__( 'Optionnelle, utilisée par le mode serveur : les hits sont signés (HMAC) et le service prend en compte l\'IP et le navigateur du visiteur plutôt que ceux de votre serveur.', 'affluence-analytics' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Optionnelle, utilisée par le mode serveur : les hits sont signés (HMAC) et le service prend en compte l\'IP et le navigateur du visiteur plutôt que ceux de votre serveur.', 'quiet-metrics' ) . '</p>';
 	}
 
 	/**
@@ -213,13 +213,13 @@ class Affluence_Settings {
 	 * @return void
 	 */
 	public function render_service_url_field() {
-		$settings = affluence_get_settings();
+		$settings = quiet_metrics_get_settings();
 		printf(
-			'<input type="url" class="regular-text code" name="%s[service_url]" value="%s" placeholder="https://app.affluence.fr" />',
+			'<input type="url" class="regular-text code" name="%s[service_url]" value="%s" placeholder="https://app.quietmetrics.dev" />',
 			esc_attr( self::OPTION_NAME ),
 			esc_attr( $settings['service_url'] )
 		);
-		echo '<p class="description">' . esc_html__( 'À modifier uniquement pour une instance dédiée ou un environnement de test.', 'affluence-analytics' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'À modifier uniquement pour une instance dédiée ou un environnement de test.', 'quiet-metrics' ) . '</p>';
 	}
 
 	/**
@@ -228,11 +228,11 @@ class Affluence_Settings {
 	 * @return void
 	 */
 	public function render_mode_field() {
-		$settings = affluence_get_settings();
+		$settings = quiet_metrics_get_settings();
 		$choices  = array(
-			'script' => __( 'Script (navigateur, first-party)', 'affluence-analytics' ),
-			'server' => __( 'Serveur (PHP, imblocable)', 'affluence-analytics' ),
-			'both'   => __( 'Les deux', 'affluence-analytics' ),
+			'script' => __( 'Script (navigateur, first-party)', 'quiet-metrics' ),
+			'server' => __( 'Serveur (PHP, imblocable)', 'quiet-metrics' ),
+			'both'   => __( 'Les deux', 'quiet-metrics' ),
 		);
 		printf( '<select name="%s[mode]">', esc_attr( self::OPTION_NAME ) );
 		foreach ( $choices as $value => $label ) {
@@ -244,7 +244,7 @@ class Affluence_Settings {
 			);
 		}
 		echo '</select>';
-		echo '<p class="description">' . esc_html__( 'Avec « Les deux », le service déduplique les pages vues reçues en double.', 'affluence-analytics' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Avec « Les deux », le service déduplique les pages vues reçues en double.', 'quiet-metrics' ) . '</p>';
 	}
 
 	/**
@@ -253,7 +253,7 @@ class Affluence_Settings {
 	 * @return void
 	 */
 	public function render_excluded_roles_field() {
-		$settings = affluence_get_settings();
+		$settings = quiet_metrics_get_settings();
 		$excluded = (array) $settings['excluded_roles'];
 		echo '<fieldset>';
 		foreach ( wp_roles()->roles as $slug => $role ) {
@@ -266,7 +266,7 @@ class Affluence_Settings {
 			);
 		}
 		echo '</fieldset>';
-		echo '<p class="description">' . esc_html__( 'Les utilisateurs connectés avec un rôle coché ne sont pas comptés (modes script et serveur).', 'affluence-analytics' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Les utilisateurs connectés avec un rôle coché ne sont pas comptés (modes script et serveur).', 'quiet-metrics' ) . '</p>';
 	}
 
 	/**
@@ -275,13 +275,13 @@ class Affluence_Settings {
 	 * @return void
 	 */
 	public function render_excluded_paths_field() {
-		$settings = affluence_get_settings();
+		$settings = quiet_metrics_get_settings();
 		printf(
 			'<textarea name="%s[excluded_paths]" rows="4" class="large-text code" placeholder="/preprod&#10;/espace-prive">%s</textarea>',
 			esc_attr( self::OPTION_NAME ),
 			esc_textarea( $settings['excluded_paths'] )
 		);
-		echo '<p class="description">' . esc_html__( 'Un préfixe de chemin par ligne : toute URL qui commence par un de ces préfixes est ignorée.', 'affluence-analytics' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Un préfixe de chemin par ligne : toute URL qui commence par un de ces préfixes est ignorée.', 'quiet-metrics' ) . '</p>';
 	}
 
 	/**
@@ -294,7 +294,7 @@ class Affluence_Settings {
 			return;
 		}
 		echo '<div class="wrap">';
-		echo '<h1>' . esc_html__( 'Affluence Analytics', 'affluence-analytics' ) . '</h1>';
+		echo '<h1>' . esc_html__( 'Quiet Metrics', 'quiet-metrics' ) . '</h1>';
 		echo '<form method="post" action="options.php">';
 		settings_fields( self::OPTION_GROUP );
 		do_settings_sections( self::PAGE_SLUG );

@@ -2,13 +2,13 @@
 /**
  * Mode script : enqueue du tracker local (first-party) et route REST de relais.
  *
- * Le fichier assets/wa.js est servi par le site du client, avec data-endpoint
- * pointant vers la route REST affluence/v1/collect du même site : le hit part
+ * Le fichier assets/qm.js est servi par le site du client, avec data-endpoint
+ * pointant vers la route REST quiet-metrics/v1/collect du même site : le hit part
  * du navigateur vers le domaine du client, puis le serveur le relaie au
- * service Affluence. Toute la collecte reste first-party, les listes de
+ * service Quiet Metrics. Toute la collecte reste first-party, les listes de
  * blocage par domaine sont inopérantes.
  *
- * @package Affluence_Analytics
+ * @package Quiet_Metrics
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,15 +18,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Enqueue du tracker et relais REST des hits vers le service.
  */
-class Affluence_Tracker {
+class Quiet_Metrics_Tracker {
 
-	const HANDLE = 'affluence-analytics';
+	const HANDLE = 'quiet-metrics';
 
 	/**
 	 * Branche les hooks si le mode script est actif.
 	 */
 	public function __construct() {
-		$settings = affluence_get_settings();
+		$settings = quiet_metrics_get_settings();
 		if ( ! in_array( $settings['mode'], array( 'script', 'both' ), true ) ) {
 			return;
 		}
@@ -36,22 +36,22 @@ class Affluence_Tracker {
 	}
 
 	/**
-	 * Enqueue de la copie locale de wa.js (jamais pour les rôles exclus).
+	 * Enqueue de la copie locale de qm.js (jamais pour les rôles exclus).
 	 *
 	 * @return void
 	 */
 	public function enqueue_tracker() {
-		$settings = affluence_get_settings();
-		if ( '' === $settings['site_key'] || affluence_user_is_excluded() ) {
+		$settings = quiet_metrics_get_settings();
+		if ( '' === $settings['site_key'] || quiet_metrics_user_is_excluded() ) {
 			return;
 		}
-		wp_enqueue_script( self::HANDLE, AFFLUENCE_PLUGIN_URL . 'assets/wa.js', array(), AFFLUENCE_VERSION, true );
-		// File d'attente : wa('evenement', {...}) reste appelable avant le chargement du script.
-		wp_add_inline_script( self::HANDLE, 'window.wa=window.wa||function(){(window.wa.q=window.wa.q||[]).push(arguments)};', 'before' );
+		wp_enqueue_script( self::HANDLE, QUIET_METRICS_PLUGIN_URL . 'assets/qm.js', array(), QUIET_METRICS_VERSION, true );
+		// File d'attente : qm('evenement', {...}) reste appelable avant le chargement du script.
+		wp_add_inline_script( self::HANDLE, 'window.qm=window.qm||function(){(window.qm.q=window.qm.q||[]).push(arguments)};', 'before' );
 	}
 
 	/**
-	 * Ajoute defer + attributs data-* attendus par wa.js sur la balise script.
+	 * Ajoute defer + attributs data-* attendus par qm.js sur la balise script.
 	 *
 	 * @param string $tag    Balise script générée.
 	 * @param string $handle Handle du script.
@@ -62,13 +62,13 @@ class Affluence_Tracker {
 		if ( self::HANDLE !== $handle ) {
 			return $tag;
 		}
-		$settings   = affluence_get_settings();
+		$settings   = quiet_metrics_get_settings();
 		$attributes = sprintf(
 			' defer data-site="%s" data-endpoint="%s"',
 			esc_attr( $settings['site_key'] ),
-			esc_attr( rest_url( 'affluence/v1/collect' ) )
+			esc_attr( rest_url( 'quiet-metrics/v1/collect' ) )
 		);
-		$paths = affluence_excluded_paths();
+		$paths = quiet_metrics_excluded_paths();
 		if ( array() !== $paths ) {
 			$attributes .= sprintf( ' data-exclude="%s"', esc_attr( implode( ',', $paths ) ) );
 		}
@@ -76,13 +76,13 @@ class Affluence_Tracker {
 	}
 
 	/**
-	 * Route REST publique de collecte : POST /wp-json/affluence/v1/collect.
+	 * Route REST publique de collecte : POST /wp-json/quiet-metrics/v1/collect.
 	 *
 	 * @return void
 	 */
 	public function register_collect_route() {
 		register_rest_route(
-			'affluence/v1',
+			'quiet-metrics/v1',
 			'/collect',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -113,7 +113,7 @@ class Affluence_Tracker {
 			return $response;
 		}
 
-		$settings = affluence_get_settings();
+		$settings = quiet_metrics_get_settings();
 		$endpoint = untrailingslashit( $settings['service_url'] ) . '/api/v1/collect';
 
 		$headers = array( 'Content-Type' => 'text/plain' );
@@ -133,7 +133,7 @@ class Affluence_Tracker {
 				'blocking'   => false,
 				'headers'    => $headers,
 				'body'       => $body,
-				'user-agent' => '' !== $user_agent ? $user_agent : 'AffluenceAnalytics-WordPress/' . AFFLUENCE_VERSION,
+				'user-agent' => '' !== $user_agent ? $user_agent : 'Quiet MetricsAnalytics-WordPress/' . QUIET_METRICS_VERSION,
 			)
 		);
 

@@ -1,5 +1,5 @@
 /*!
- * Affluence wa.js : tracker d'audience sans cookies.
+ * Quiet Metrics qm.js : tracker d'audience sans cookies.
  * Source de vérité : packages/tracker-js/tracker.js (la copie servie est resynchronisée).
  * COPIE EMBARQUÉE pour le plugin WordPress : ne pas modifier ici, resynchroniser depuis la source.
  * Cible : < 2 Ko min+gzip. ES5, aucun build requis.
@@ -11,8 +11,8 @@
   'use strict';
 
   var script = doc.currentScript;
-  if (!script || win.__waLoaded) return;
-  win.__waLoaded = true;
+  if (!script || win.__qmLoaded) return;
+  win.__qmLoaded = true;
 
   var loc = win.location;
   var nav = win.navigator;
@@ -37,12 +37,12 @@
     .split(',').map(trim).filter(Boolean);
 
   function trim(s) { return s.replace(/^\s+|\s+$/g, ''); }
-  function warn(m) { if (win.console && console.warn) console.warn('[webanalytics] ' + m); }
+  function warn(m) { if (win.console && console.warn) console.warn('[quietmetrics] ' + m); }
 
   /* -- Garde-fous --------------------------------------------------------- */
 
   function shouldIgnore() {
-    if (win.__waDisable) return true;                    // kill switch manuel
+    if (win.__qmDisable) return true;                    // kill switch manuel
     if (nav.webdriver) return true;                      // navigateurs pilotés
     if (respectDnt && (nav.doNotTrack === '1' || nav.globalPrivacyControl)) return true;
     if (!devMode && (loc.protocol === 'file:' ||
@@ -120,13 +120,13 @@
   }
 
   /* -- API publique -------------------------------------------------------------
-   * wa('nom_evenement', {prop: 'valeur'})
+   * qm('nom_evenement', {prop: 'valeur'})
    * Les appels faits avant le chargement (snippet à file d'attente) sont rejoués.
    */
-  var queued = (win.wa && win.wa.q) || [];
-  win.wa = function (name, props) { if (name) send('event', name, props); };
-  win.wa.pageview = pageview;
-  for (var i = 0; i < queued.length; i++) win.wa.apply(null, queued[i]);
+  var queued = (win.qm && win.qm.q) || [];
+  win.qm = function (name, props) { if (name) send('event', name, props); };
+  win.qm.pageview = pageview;
+  for (var i = 0; i < queued.length; i++) win.qm.apply(null, queued[i]);
 
   /* -- Premier hit (en ignorant le pré-rendu) ------------------------------- */
 
