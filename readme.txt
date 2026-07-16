@@ -1,5 +1,5 @@
 === Quiet Metrics ===
-Contributors: laboiteacode
+Contributors: quietmetrics
 Tags: analytics, statistiques, audience, rgpd, privacy
 Requires at least: 5.5
 Tested up to: 6.8
