@@ -14,7 +14,7 @@ Mesure d'audience sans cookies pour WordPress : script first-party, tracking ser
 
 Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quiet Metrics, édité par La Boîte à Code. La mesure se fait sans cookie et sans stockage chez le visiteur : pas de bannière de consentement dédiée à l'analytics.
 
-* **Mode script (first-party)** : le fichier qm.js est une copie locale servie par votre propre site, et les hits transitent par la REST API de votre site (route quiet-metrics/v1/collect) avant d'être relayés au service. Aucun domaine tiers côté navigateur. Ce relais exige la clé secrète du site : sans elle, il est désactivé (voir la FAQ ci-dessous).
+* **Mode script (first-party)** : le fichier qm.js est une copie locale servie par votre propre site, et les hits transiteraient par la REST API de votre site (route quiet-metrics/v1/collect) avant d'être relayés au service. Aucun domaine tiers côté navigateur. Ce mode n'est pas encore disponible : le relais exigerait une signature du site qui n'est pas encore implémentée, quelle que soit la clé secrète renseignée (voir la FAQ ci-dessous). Utilisez le mode serveur en attendant.
 * **Mode serveur (imblocable)** : les pages vues sont envoyées par PHP en fin de requête, sans JavaScript. Invisible pour les bloqueurs de publicité. Avec la clé secrète, les hits sont signés (HMAC) et le service prend en compte l'IP et le navigateur du visiteur.
 * **Exclusions** : rôles connectés (administrateurs et éditeurs par défaut) et préfixes de chemins (un par ligne).
 * **Événements personnalisés** : qm('inscription', {plan: 'pro'}) côté navigateur, quiet_metrics_event('achat', array('montant' => 49)) côté PHP.
@@ -40,7 +40,7 @@ Non. Ni cookie, ni localStorage, ni empreinte persistante côté visiteur. Voir 
 
 = À quoi sert la clé secrète ? =
 
-Elle permet de signer les hits (HMAC SHA-256) pour que le service fasse foi de l'IP, du User-Agent et de l'horodatage du visiteur transmis dans le payload, plutôt que de ceux de votre serveur. Le mode script en a besoin : son relais passe par votre serveur, donc sans clé secrète il est désactivé (aucune visite mesurée) et un message vous le signale dans l'administration. Le mode serveur fonctionne aussi sans elle, mais compte alors avec les informations de la connexion sortante de votre serveur : elle reste fortement recommandée.
+Elle permet de signer les hits (HMAC SHA-256) pour que le service fasse foi de l'IP, du User-Agent et de l'horodatage du visiteur transmis dans le payload, plutôt que de ceux de votre serveur. Le mode script en aurait besoin, mais son relais n'est pas encore signé : ce mode reste indisponible quelle que soit cette clé, et un message vous le signale dans l'administration ; ce sera corrigé à la publication du plugin. Le mode serveur, lui, fonctionne dès aujourd'hui et se signe avec cette clé ; sans elle, il compte avec les informations de la connexion sortante de votre serveur, la clé reste donc fortement recommandée.
 
 = Puis-je exclure certaines pages ou certains utilisateurs ? =
 

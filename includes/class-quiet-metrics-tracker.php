@@ -25,11 +25,14 @@ class Quiet_Metrics_Tracker {
 	/**
 	 * Branche les hooks si le mode script est actif.
 	 *
-	 * L'avertissement d'administration est branché AVANT le garde-fou de clé
-	 * secrète : c'est justement quand le relais refuse d'envoyer qu'il faut le
-	 * dire à l'administrateur. Sans clé secrète, on ne branche NI l'injection
-	 * du script NI la route de relais : le mode script reste inerte plutôt que
-	 * de compter tous les visiteurs avec l'IP du serveur.
+	 * L'avertissement d'administration est branché AVANT le garde-fou de
+	 * relais : c'est justement quand le relais refuse d'envoyer qu'il faut le
+	 * dire à l'administrateur. Le relais n'est jamais disponible tant que sa
+	 * signature n'est pas livrée (voir Quiet_Metrics_Relay_Policy::can_relay,
+	 * refus inconditionnel) : on ne branche donc NI l'injection du script NI
+	 * la route de relais, quelle que soit la clé secrète renseignée. Le mode
+	 * script reste inerte plutôt que de compter tous les visiteurs avec l'IP
+	 * du serveur.
 	 */
 	public function __construct() {
 		$settings = quiet_metrics_get_settings();
@@ -37,7 +40,7 @@ class Quiet_Metrics_Tracker {
 			return;
 		}
 
-		add_action( 'admin_notices', array( $this, 'render_missing_secret_notice' ) );
+		add_action( 'admin_notices', array( $this, 'render_relay_unavailable_notice' ) );
 
 		if ( ! Quiet_Metrics_Relay_Policy::can_relay( $settings['secret_key'] ) ) {
 			return;
@@ -49,20 +52,22 @@ class Quiet_Metrics_Tracker {
 	}
 
 	/**
-	 * Avertit l'administrateur, dans l'interface d'administration, quand le mode
-	 * script est actif sans clé secrète : le relais est alors désactivé et rien
-	 * n'est mesuré, plutôt que de compter tous les visiteurs avec l'IP du
-	 * serveur WordPress. Réservé aux comptes qui peuvent corriger le réglage.
+	 * Avertit l'administrateur, dans l'interface d'administration, que le mode
+	 * script est indisponible : son relais exigerait une signature (HMAC) qui
+	 * n'est pas encore implémentée, quelle que soit la clé secrète renseignée.
+	 * Rien n'est mesuré par ce mode plutôt que de compter tous les visiteurs
+	 * avec l'IP du serveur WordPress. Réservé aux comptes qui peuvent corriger
+	 * le réglage.
 	 *
 	 * @return void
 	 */
-	public function render_missing_secret_notice() {
+	public function render_relay_unavailable_notice() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
 		$settings = quiet_metrics_get_settings();
-		if ( ! Quiet_Metrics_Relay_Policy::should_warn_missing_secret( $settings['mode'], $settings['site_key'], $settings['secret_key'] ) ) {
+		if ( ! Quiet_Metrics_Relay_Policy::should_warn_relay_unavailable( $settings['mode'], $settings['site_key'], $settings['secret_key'] ) ) {
 			return;
 		}
 
@@ -70,8 +75,8 @@ class Quiet_Metrics_Tracker {
 
 		printf(
 			'<div class="notice notice-error"><p><strong>%s</strong> %s</p><p><a href="%s">%s</a></p></div>',
-			esc_html__( 'Quiet Metrics : mode script désactivé.', 'quiet-metrics' ),
-			esc_html__( 'Le mode script relaie les visites depuis votre serveur : sans clé secrète, le service ne peut pas distinguer vos visiteurs et les compterait tous avec l\'adresse IP de votre serveur. Le relais est donc désactivé et aucune visite n\'est mesurée pour l\'instant. Renseignez la clé secrète du site, ou choisissez le mode serveur.', 'quiet-metrics' ),
+			esc_html__( 'Quiet Metrics : mode script indisponible pour l\'instant.', 'quiet-metrics' ),
+			esc_html__( 'Le mode script relaierait les visites depuis votre serveur, mais cela exige une signature (HMAC) qui n\'est pas encore implémentée : renseigner la clé secrète ne suffit pas, quelle que soit sa valeur. Aucune visite n\'est donc mesurée par ce mode pour l\'instant ; ce sera corrigé à la publication du plugin. En attendant, choisissez le mode serveur : il fonctionne déjà et se signe avec la même clé secrète.', 'quiet-metrics' ),
 			esc_url( $url ),
 			esc_html__( 'Ouvrir les réglages Quiet Metrics', 'quiet-metrics' )
 		);
@@ -157,12 +162,14 @@ class Quiet_Metrics_Tracker {
 
 		$settings = quiet_metrics_get_settings();
 
-		// Garde-fou explicite au point d'envoi : sans clé secrète, on ne relaie
-		// pas un hit qui serait attribué à l'IP du serveur. Le constructeur
-		// n'enregistre déjà pas cette route dans ce cas ; ce refus reste ici
-		// pour que l'intention tienne même si le câblage change. L'administrateur
-		// est prévenu par render_missing_secret_notice(), pas par cette réponse
-		// (le visiteur ne doit jamais voir d'erreur : on renvoie 202).
+		// Garde-fou explicite au point d'envoi : can_relay() refuse toujours
+		// (signature non implémentée), quelle que soit la clé secrète, donc on
+		// ne relaie jamais un hit qui serait attribué à l'IP du serveur. Le
+		// constructeur n'enregistre déjà pas cette route dans ce cas ; ce refus
+		// reste ici en défense en profondeur, pour que l'intention tienne même
+		// si le câblage change. L'administrateur est prévenu par
+		// render_relay_unavailable_notice(), pas par cette réponse (le visiteur
+		// ne doit jamais voir d'erreur : on renvoie 202).
 		if ( ! Quiet_Metrics_Relay_Policy::can_relay( $settings['secret_key'] ) ) {
 			return $response;
 		}
