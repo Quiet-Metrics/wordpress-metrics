@@ -32,7 +32,7 @@
   var trackOutbound = script.getAttribute('data-outbound') !== 'false';
   // Téléchargements et 404 : opt-in, contrairement aux liens sortants. Les
   // activer par défaut ajouterait des événements au quota de comptes dont le
-  // trafic n'a pas bougé — une mise à jour du tracker ne doit pas gonfler une
+  // trafic n'a pas bougé : une mise à jour du tracker ne doit pas gonfler une
   // facture. À poser sciemment, et pour le 404 sur le gabarit d'erreur seul.
   var trackDownloads = script.getAttribute('data-downloads') === 'true';
   var track404 = script.getAttribute('data-404') === 'true';
