@@ -24,6 +24,7 @@ define( 'QUIET_METRICS_PLUGIN_FILE', __FILE__ );
 define( 'QUIET_METRICS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QUIET_METRICS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
+require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-relay-policy.php';
 require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-settings.php';
 require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-tracker.php';
 require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-server.php';

@@ -1,7 +1,6 @@
 /*!
  * Quiet Metrics qm.js : tracker d'audience sans cookies.
  * Source de vérité : packages/tracker-js/tracker.js (la copie servie est resynchronisée).
- * COPIE EMBARQUÉE pour le plugin WordPress : ne pas modifier ici, resynchroniser depuis la source.
  * Cible : < 2 Ko min+gzip. ES5, aucun build requis.
  *
  * Aucune donnée n'est stockée chez le visiteur (ni cookie, ni localStorage).
@@ -31,6 +30,12 @@
   var trackSpa = script.getAttribute('data-spa') !== 'false';
   var trackHash = script.getAttribute('data-hash') === 'true';
   var trackOutbound = script.getAttribute('data-outbound') !== 'false';
+  // Téléchargements et 404 : opt-in, contrairement aux liens sortants. Les
+  // activer par défaut ajouterait des événements au quota de comptes dont le
+  // trafic n'a pas bougé — une mise à jour du tracker ne doit pas gonfler une
+  // facture. À poser sciemment, et pour le 404 sur le gabarit d'erreur seul.
+  var trackDownloads = script.getAttribute('data-downloads') === 'true';
+  var track404 = script.getAttribute('data-404') === 'true';
   var devMode = script.getAttribute('data-dev') === 'true';
   var respectDnt = script.getAttribute('data-dnt') === 'respect';
   var excluded = (script.getAttribute('data-exclude') || '')
@@ -106,14 +111,26 @@
   if (trackHash) win.addEventListener('hashchange', onNav);
   function onNav() { setTimeout(pageview, 0); }           // laisse l'URL se stabiliser
 
-  /* -- Liens sortants --------------------------------------------------------- */
+  /* -- Liens sortants et téléchargements ---------------------------------- */
 
-  if (trackOutbound) {
+  // Liste volontairement courte : mieux vaut manquer un format exotique que
+  // compter un clic de navigation comme un téléchargement.
+  var DOWNLOAD_EXT = /\.(pdf|zip|rar|7z|gz|tar|docx?|xlsx?|pptx?|csv|txt|rtf|dmg|pkg|exe|msi|apk|mp3|mp4|wav|avi|mov|epub)($|\?)/i;
+
+  if (trackOutbound || trackDownloads) {
     doc.addEventListener('click', function (e) {
       var el = e.target;
       while (el && el.tagName !== 'A') el = el.parentElement;
       if (!el || !el.href || !/^https?:/.test(el.href)) return;
-      if (el.host && el.host !== loc.host) {
+
+      // Un téléchargement externe n'émet qu'UN événement, jamais les deux :
+      // deux événements pour un clic doubleraient la consommation de quota.
+      if (trackDownloads && DOWNLOAD_EXT.test(el.pathname || '')) {
+        send('event', 'Téléchargement', { url: el.href });
+        return;
+      }
+
+      if (trackOutbound && el.host && el.host !== loc.host) {
         send('event', 'Lien sortant', { url: el.href });
       }
     }, true);
@@ -130,9 +147,16 @@
 
   /* -- Premier hit (en ignorant le pré-rendu) ------------------------------- */
 
-  if (doc.visibilityState === 'hidden' && doc.prerendering) {
-    doc.addEventListener('prerenderingchange', pageview, { once: true });
-  } else {
+  // Le 404 accompagne la page vue plutôt que de la remplacer : la page d'erreur
+  // reste comptée comme une page vue, et l'événement dit laquelle a manqué.
+  function firstHit() {
     pageview();
+    if (track404) send('event', '404', { path: loc.pathname });
+  }
+
+  if (doc.visibilityState === 'hidden' && doc.prerendering) {
+    doc.addEventListener('prerenderingchange', firstHit, { once: true });
+  } else {
+    firstHit();
   }
 })(window, document);

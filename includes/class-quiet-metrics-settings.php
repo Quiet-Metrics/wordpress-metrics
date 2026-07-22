@@ -204,7 +204,7 @@ class Quiet_Metrics_Settings {
 			esc_attr( self::OPTION_NAME ),
 			esc_attr( $settings['secret_key'] )
 		);
-		echo '<p class="description">' . esc_html__( 'Optionnelle, utilisée par le mode serveur : les hits sont signés (HMAC) et le service prend en compte l\'IP et le navigateur du visiteur plutôt que ceux de votre serveur.', 'quiet-metrics' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Requise par le mode script (le relais est désactivé sans elle) et recommandée pour le mode serveur : les hits sont signés (HMAC) et le service prend en compte l\'IP et le navigateur du visiteur plutôt que ceux de votre serveur.', 'quiet-metrics' ) . '</p>';
 	}
 
 	/**
@@ -244,7 +244,7 @@ class Quiet_Metrics_Settings {
 			);
 		}
 		echo '</select>';
-		echo '<p class="description">' . esc_html__( 'Avec « Les deux », le service déduplique les pages vues reçues en double.', 'quiet-metrics' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Les modes « Script » et « Les deux » relaient les visites depuis votre serveur et exigent la clé secrète ci-dessus, sans quoi le relais est désactivé. Avec « Les deux », le service déduplique les pages vues reçues en double.', 'quiet-metrics' ) . '</p>';
 	}
 
 	/**

@@ -24,15 +24,57 @@ class Quiet_Metrics_Tracker {
 
 	/**
 	 * Branche les hooks si le mode script est actif.
+	 *
+	 * L'avertissement d'administration est branché AVANT le garde-fou de clé
+	 * secrète : c'est justement quand le relais refuse d'envoyer qu'il faut le
+	 * dire à l'administrateur. Sans clé secrète, on ne branche NI l'injection
+	 * du script NI la route de relais : le mode script reste inerte plutôt que
+	 * de compter tous les visiteurs avec l'IP du serveur.
 	 */
 	public function __construct() {
 		$settings = quiet_metrics_get_settings();
 		if ( ! in_array( $settings['mode'], array( 'script', 'both' ), true ) ) {
 			return;
 		}
+
+		add_action( 'admin_notices', array( $this, 'render_missing_secret_notice' ) );
+
+		if ( ! Quiet_Metrics_Relay_Policy::can_relay( $settings['secret_key'] ) ) {
+			return;
+		}
+
 		add_action( 'rest_api_init', array( $this, 'register_collect_route' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_tracker' ) );
 		add_filter( 'script_loader_tag', array( $this, 'add_tracker_attributes' ), 10, 3 );
+	}
+
+	/**
+	 * Avertit l'administrateur, dans l'interface d'administration, quand le mode
+	 * script est actif sans clé secrète : le relais est alors désactivé et rien
+	 * n'est mesuré, plutôt que de compter tous les visiteurs avec l'IP du
+	 * serveur WordPress. Réservé aux comptes qui peuvent corriger le réglage.
+	 *
+	 * @return void
+	 */
+	public function render_missing_secret_notice() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$settings = quiet_metrics_get_settings();
+		if ( ! Quiet_Metrics_Relay_Policy::should_warn_missing_secret( $settings['mode'], $settings['site_key'], $settings['secret_key'] ) ) {
+			return;
+		}
+
+		$url = admin_url( 'options-general.php?page=' . Quiet_Metrics_Settings::PAGE_SLUG );
+
+		printf(
+			'<div class="notice notice-error"><p><strong>%s</strong> %s</p><p><a href="%s">%s</a></p></div>',
+			esc_html__( 'Quiet Metrics : mode script désactivé.', 'quiet-metrics' ),
+			esc_html__( 'Le mode script relaie les visites depuis votre serveur : sans clé secrète, le service ne peut pas distinguer vos visiteurs et les compterait tous avec l\'adresse IP de votre serveur. Le relais est donc désactivé et aucune visite n\'est mesurée pour l\'instant. Renseignez la clé secrète du site, ou choisissez le mode serveur.', 'quiet-metrics' ),
+			esc_url( $url ),
+			esc_html__( 'Ouvrir les réglages Quiet Metrics', 'quiet-metrics' )
+		);
 	}
 
 	/**
@@ -114,6 +156,17 @@ class Quiet_Metrics_Tracker {
 		}
 
 		$settings = quiet_metrics_get_settings();
+
+		// Garde-fou explicite au point d'envoi : sans clé secrète, on ne relaie
+		// pas un hit qui serait attribué à l'IP du serveur. Le constructeur
+		// n'enregistre déjà pas cette route dans ce cas ; ce refus reste ici
+		// pour que l'intention tienne même si le câblage change. L'administrateur
+		// est prévenu par render_missing_secret_notice(), pas par cette réponse
+		// (le visiteur ne doit jamais voir d'erreur : on renvoie 202).
+		if ( ! Quiet_Metrics_Relay_Policy::can_relay( $settings['secret_key'] ) ) {
+			return $response;
+		}
+
 		$endpoint = untrailingslashit( $settings['service_url'] ) . '/api/v1/collect';
 
 		$headers = array( 'Content-Type' => 'text/plain' );
