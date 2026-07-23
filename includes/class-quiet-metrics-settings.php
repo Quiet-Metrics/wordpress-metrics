@@ -215,7 +215,7 @@ class Quiet_Metrics_Settings {
 	public function render_service_url_field() {
 		$settings = quiet_metrics_get_settings();
 		printf(
-			'<input type="url" class="regular-text code" name="%s[service_url]" value="%s" placeholder="https://app.quietmetrics.dev" />',
+			'<input type="url" class="regular-text code" name="%s[service_url]" value="%s" placeholder="https://quietmetrics.dev" />',
 			esc_attr( self::OPTION_NAME ),
 			esc_attr( $settings['service_url'] )
 		);

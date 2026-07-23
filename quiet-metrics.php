@@ -38,7 +38,7 @@ function quiet_metrics_default_settings() {
 	return array(
 		'site_key'       => '',
 		'secret_key'     => '',
-		'service_url'    => 'https://app.quietmetrics.dev',
+		'service_url'    => 'https://quietmetrics.dev',
 		'mode'           => 'script',
 		'excluded_roles' => array( 'administrator', 'editor' ),
 		'excluded_paths' => '',

@@ -26,7 +26,7 @@ Tout se passe dans Réglages > Quiet Metrics (option unique `quiet_metrics_setti
 |---|---|---|
 | Clé publique du site | vide | identifie le site (`qm_pub_...`), rien n'est envoyé sans elle |
 | Clé secrète | vide | mode serveur signé (HMAC) : IP, User-Agent et horodatage du visiteur font foi |
-| URL du service | `https://app.quietmetrics.dev` | instance Quiet Metrics qui reçoit les hits sur `/api/v1/collect` |
+| URL du service | `https://quietmetrics.dev` | instance Quiet Metrics qui reçoit les hits sur `/api/v1/collect` |
 | Mode de collecte | script | `script`, `server` ou `both` |
 | Rôles exclus | administrateur, éditeur | utilisateurs connectés jamais comptés (les deux modes) |
 | Chemins exclus | vide | préfixes d'URL, un par ligne (ex. `/preprod`) |

@@ -21,9 +21,9 @@ Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quie
 
 = Service externe =
 
-Ce plugin envoie les données de mesure au service Quiet Metrics configuré dans Réglages > Quiet Metrics (par défaut https://app.quietmetrics.dev), sur le endpoint /api/v1/collect. Sont transmis : URL de la page vue, referrer, langue, largeur d'écran (mode script), nom et propriétés d'événement, ainsi que l'adresse IP et le User-Agent du visiteur, utilisés par le service pour la déduction technique (visiteur unique, appareil, pays) puis jetés, jamais stockés en clair.
+Ce plugin envoie les données de mesure au service Quiet Metrics configuré dans Réglages > Quiet Metrics (par défaut https://quietmetrics.dev), sur le endpoint /api/v1/collect. Sont transmis : URL de la page vue, referrer, langue, largeur d'écran (mode script), nom et propriétés d'événement, ainsi que l'adresse IP et le User-Agent du visiteur, utilisés par le service pour la déduction technique (visiteur unique, appareil, pays) puis jetés, jamais stockés en clair.
 
-Aucune donnée n'est envoyée tant que la clé publique du site n'est pas renseignée dans les réglages. Éditeur : La Boîte à Code (https://laboiteacode.fr). Service : https://app.quietmetrics.dev.
+Aucune donnée n'est envoyée tant que la clé publique du site n'est pas renseignée dans les réglages. Éditeur : La Boîte à Code (https://laboiteacode.fr). Service : https://quietmetrics.dev.
 
 == Installation ==
 
