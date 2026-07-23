@@ -1,77 +1,85 @@
-# Quiet Metrics pour WordPress
+# Quiet Metrics for WordPress
 
-Plugin WordPress officiel d'Quiet Metrics (La Boîte à Code) : mesure d'audience sans cookies, avec collecte first-party par script, tracking 100 % serveur imblocable, ou les deux. Aucune dépendance Composer chez l'utilisateur final : le SDK PHP et le tracker JS sont embarqués.
+![Quiet Metrics: WordPress plugin](art/banner.png)
+
+> 🇫🇷 [Version française](README.fr.md)
+
+Official WordPress plugin for Quiet Metrics (La Boîte à Code): cookie-free audience measurement, with first-party script collection, unblockable 100% server-side tracking, or both. No Composer dependency for the end user: the PHP SDK and the JS tracker are embedded.
 
 ## Installation
 
-Installation manuelle (développeurs, agences) :
+Manual installation (developers, agencies):
 
 ```bash
-cp -R packages/wordpress-plugin /chemin/du/site/wp-content/plugins/quiet-metrics
+cp -R packages/wordpress-plugin /path/to/site/wp-content/plugins/quiet-metrics
 ```
 
-Puis :
+Then:
 
-1. Activez « Quiet Metrics » dans Extensions.
-2. Ouvrez Réglages > Quiet Metrics et collez la clé publique du site (`qm_pub_...`).
-3. Choisissez le mode de collecte.
+1. Activate "Quiet Metrics" in Plugins.
+2. Open Settings > Quiet Metrics and paste the site's public key (`qm_pub_...`).
+3. Pick the collection mode.
 
-Aucun `composer install` : `includes/Client.php` est une copie embarquée du SDK coeur ([packages/php](../php)) et `assets/qm.js` une copie du tracker ([packages/tracker-js](../tracker-js)).
+No `composer install`: `includes/Client.php` is an embedded copy of the core SDK ([php-metrics](https://github.com/Quiet-Metrics/php-metrics)) and `assets/qm.js` a copy of the tracker ([tracker-js](https://github.com/Quiet-Metrics/tracker-js)).
 
 ## Configuration
 
-Tout se passe dans Réglages > Quiet Metrics (option unique `quiet_metrics_settings`) :
+Everything lives in Settings > Quiet Metrics (single `quiet_metrics_settings` option):
 
-| Réglage | Défaut | Rôle |
+| Setting | Default | Role |
 |---|---|---|
-| Clé publique du site | vide | identifie le site (`qm_pub_...`), rien n'est envoyé sans elle |
-| Clé secrète | vide | mode serveur signé (HMAC) : IP, User-Agent et horodatage du visiteur font foi |
-| URL du service | `https://quietmetrics.dev` | instance Quiet Metrics qui reçoit les hits sur `/api/v1/collect` |
-| Mode de collecte | script | `script`, `server` ou `both` |
-| Rôles exclus | administrateur, éditeur | utilisateurs connectés jamais comptés (les deux modes) |
-| Chemins exclus | vide | préfixes d'URL, un par ligne (ex. `/preprod`) |
+| Site public key | empty | identifies the site (`qm_pub_...`); nothing is sent without it |
+| Secret key | empty | signed server mode (HMAC): the visitor's IP, User-Agent and timestamp are trusted |
+| Service URL | `https://quietmetrics.dev` | Quiet Metrics instance receiving hits on `/api/v1/collect` |
+| Collection mode | script | `script`, `server` or `both` |
+| Excluded roles | administrator, editor | logged-in users never counted (both modes) |
+| Excluded paths | empty | URL prefixes, one per line (e.g. `/staging`) |
 
 ## Usage
 
-### Mode script (first-party)
+### Script mode (first-party)
 
-Le plugin enqueue la copie locale `assets/qm.js` avec `defer` et les attributs `data-site` et `data-endpoint`. Le `data-endpoint` pointe vers la route REST du site lui-même (`POST /wp-json/quiet-metrics/v1/collect`), qui relaie le corps brut vers `{service}/api/v1/collect` (timeout 2 s, non bloquant, en-têtes `X-Forwarded-For` et `User-Agent` d'origine transmis) : le navigateur ne parle jamais à un domaine tiers.
+The plugin enqueues the local copy `assets/qm.js` with `defer` and the `data-site` and `data-endpoint` attributes. The `data-endpoint` points to the site's own REST route (`POST /wp-json/quiet-metrics/v1/collect`), which relays the raw body to `{service}/api/v1/collect` (2 s timeout, non-blocking, original `X-Forwarded-For` and `User-Agent` headers forwarded): the browser never talks to a third-party domain.
 
-Événement personnalisé côté navigateur (file d'attente intégrée, appelable avant le chargement du script) :
+Custom event in the browser (built-in queue, callable before the script loads):
 
 ```html
 <script>
-  qm('inscription', { plan: 'pro' });
+  qm('signup', { plan: 'pro' });
 </script>
 ```
 
-### Mode serveur (imblocable)
+### Server mode (unblockable)
 
-Chaque page vue d'un visiteur non exclu est envoyée par PHP : décision sur `template_redirect`, envoi sur `shutdown` via le SDK embarqué (socket fire-and-forget, repli cURL 400 ms, erreurs silencieuses). Zéro JavaScript, rien à bloquer côté navigateur.
+Every page view from a non-excluded visitor is sent by PHP: decision on `template_redirect`, sending on `shutdown` through the embedded SDK (fire-and-forget socket, 400 ms cURL fallback, silent errors). Zero JavaScript, nothing to block browser-side.
 
-Événement personnalisé côté PHP, dans un thème ou un plugin :
+Custom event in PHP, from a theme or a plugin:
 
 ```php
 add_action( 'woocommerce_thankyou', function ( $order_id ) {
-    quiet_metrics_event( 'achat', array( 'commande' => $order_id ) );
+    quiet_metrics_event( 'purchase', array( 'order' => $order_id ) );
 } );
 ```
 
-Le SDK embarqué reste utilisable directement si besoin d'options avancées (mêmes signatures que `quiet-metrics/php-metrics`) :
+The embedded SDK remains directly usable for advanced options (same signatures as `quiet-metrics/php-metrics`):
 
 ```php
 $client = quiet_metrics_client(); // \QuietMetrics\Client|null
 if ( $client !== null ) {
-    $client->pageview( array( 'url' => 'https://monsite.fr/page-virtuelle' ) );
+    $client->pageview( array( 'url' => 'https://mysite.com/virtual-page' ) );
 }
 ```
 
-## Comment ça marche
+## How it works
 
-- Sont ignorés en mode serveur : requêtes admin, AJAX, cron, REST, XML-RPC, prévisualisations, flux, robots, rôles exclus et chemins exclus. En mode script, les rôles exclus ne reçoivent pas le script et les chemins exclus sont passés au tracker via `data-exclude`.
-- Avec la clé secrète, le SDK signe chaque hit : en-têtes `X-QM-Timestamp` et `X-QM-Signature` (HMAC SHA-256 de `{timestamp}.{corps}`), conformément à la spec [docs/05-api-et-sdk.md](../../docs/05-api-et-sdk.md).
-- La désinstallation (`uninstall.php`) supprime l'option `quiet_metrics_settings`, y compris en multisite. Le plugin ne crée aucune table.
+- Ignored in server mode: admin, AJAX, cron, REST, XML-RPC requests, previews, feeds, robots, excluded roles and excluded paths. In script mode, excluded roles never receive the script and excluded paths are passed to the tracker via `data-exclude`.
+- With the secret key, the SDK signs every hit: `X-QM-Timestamp` and `X-QM-Signature` headers (HMAC SHA-256 of `{timestamp}.{body}`), per the monorepo spec `docs/05-api-et-sdk.md`.
+- Uninstalling (`uninstall.php`) removes the `quiet_metrics_settings` option, multisite included. The plugin creates no table.
 
-## Licence
+## wordpress.org directory assets
 
-GPLv2 ou ultérieure (exigence du répertoire wordpress.org). Le SDK embarqué provient du package `quiet-metrics/php-metrics`, publié sous licence MIT, compatible GPL.
+The [`.wordpress-org/`](.wordpress-org/) folder holds the visuals in the plugin directory's official formats, ready for the SVN `assets/` folder at submission time: `banner-1544x500.png` (retina), `banner-772x250.png`, `icon-256x256.png`, `icon-128x128.png` (source `icon.svg`).
+
+## License
+
+GPLv2 or later (a wordpress.org directory requirement). The embedded SDK comes from the `quiet-metrics/php-metrics` package, published under the MIT license, GPL-compatible.
