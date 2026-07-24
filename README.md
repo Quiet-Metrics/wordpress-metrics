@@ -83,3 +83,5 @@ The [`.wordpress-org/`](.wordpress-org/) folder holds the visuals in the plugin 
 ## License
 
 GPLv2 or later (a wordpress.org directory requirement). The embedded SDK comes from the `quiet-metrics/php-metrics` package, published under the MIT license, GPL-compatible.
+
+A [La Boîte à Code](https://laboiteacode.fr) plugin for [Quiet Metrics](https://quietmetrics.dev).

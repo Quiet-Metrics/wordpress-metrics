@@ -83,3 +83,5 @@ Le dossier [`.wordpress-org/`](.wordpress-org/) contient les visuels aux formats
 ## Licence
 
 GPLv2 ou ultérieure (exigence du répertoire wordpress.org). Le SDK embarqué provient du package `quiet-metrics/php-metrics`, publié sous licence MIT, compatible GPL.
+
+Un plugin [La Boîte à Code](https://laboiteacode.fr) pour [Quiet Metrics](https://quietmetrics.dev).
