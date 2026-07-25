@@ -1,5 +1,6 @@
 /*!
  * Quiet Metrics qm.js : tracker d'audience sans cookies.
+ * (c) La Boîte à Code (laboiteacode.fr) · https://quietmetrics.dev · Licence MIT.
  * Source de vérité : packages/tracker-js/tracker.js (la copie servie est resynchronisée).
  * Cible : < 2 Ko min+gzip. ES5, aucun build requis.
  *

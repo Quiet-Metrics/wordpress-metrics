@@ -87,6 +87,10 @@ final class Client
     private function send(string $type, ?string $name, array $props, array $overrides): void
     {
         try {
+            if ($this->publicKey === '') {
+                return;
+            }
+
             $ctx = array_merge($this->requestContext(), $this->defaults, $overrides);
 
             $payload = [
