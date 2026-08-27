@@ -3,7 +3,7 @@ Contributors: quietmetrics
 Tags: analytics, statistiques, audience, rgpd, privacy
 Requires at least: 5.5
 Tested up to: 6.8
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -52,7 +52,12 @@ Non : le service déduplique les hits identiques rapprochés (même page, même 
 
 == Changelog ==
 
-= 1.0.0 =
+= 0.1.1 =
+* Bannière, visuels du répertoire et icône repris à la charte Quiet Metrics.
+* L'icône utilise désormais le sceau de la marque, lisible en petite taille.
+* Aucun changement de code.
+
+= 0.1.0 =
 * Version initiale.
 * Mode script first-party : qm.js servi localement, relais des hits par la route REST quiet-metrics/v1/collect.
 * Mode serveur : pageviews envoyées en PHP via le SDK embarqué (non bloquant, signé HMAC avec la clé secrète).
