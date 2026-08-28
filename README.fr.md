@@ -4,7 +4,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-Plugin WordPress officiel de Quiet Metrics (La Boîte à Code) : mesure d'audience sans cookies, avec collecte first-party par script, tracking 100 % serveur imblocable, ou les deux. Aucune dépendance Composer chez l'utilisateur final : le SDK PHP et le tracker JS sont embarqués.
+Plugin WordPress officiel de Quiet Metrics (La Boîte à Code) : mesure d'audience sans cookie d'identification ni de traçabilité, avec collecte first-party par script, tracking 100 % serveur imblocable, ou les deux. Aucune dépendance Composer chez l'utilisateur final : le SDK PHP et le tracker JS sont embarqués.
 
 ## Installation
 
@@ -69,6 +69,21 @@ if ( $client !== null ) {
     $client->pageview( array( 'url' => 'https://monsite.fr/page-virtuelle' ) );
 }
 ```
+
+## S'exclure de la mesure
+
+Un visiteur peut demander à ne plus être compté, sans compte et sans écrire à personne : il visite une page de votre site avec `?qm_ignore=1`, et `?qm_ignore=0` le remet dans la mesure.
+
+```
+https://monsite.fr/?qm_ignore=1     ne plus être compté
+https://monsite.fr/?qm_ignore=0     être compté à nouveau
+```
+
+Le marqueur est un **cookie propriétaire de votre site**, nommé `qm_ignore` et valant `1` (`path=/`, `samesite=lax`, `secure` en https, cinq ans). Le plugin s'en charge, sans réglage à toucher : il pose ou retire le marqueur, et plus rien ne part tant qu'il est là.
+
+Il ne contient aucun identifiant (sa valeur est la même chez tout le monde), il n'est jamais transmis à Quiet Metrics, et il n'existe que pour arrêter la mesure : c'est un marqueur de refus, pas un traceur. Le tracker JS écrit en plus la même valeur en `localStorage`, mais un SDK serveur ne lit que le cookie : une seule visite suffit donc pour les trois modes de collecte du plugin, script, serveur et les deux.
+
+Cela ne remplace pas les rôles et les chemins exclus des réglages : ceux-là appartiennent à l'administrateur du site, le marqueur appartient au visiteur.
 
 ## Comment ça marche
 

@@ -7,6 +7,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 Full pre-publication review pending (the core PHP SDK and the Laravel bridge already went through theirs); the embedded tracker copy must be resynchronised with its source as part of it.
 
+### Added
+- Opt-out marker: a visitor loading any page of the site with `?qm_ignore=1` stops being counted, and `?qm_ignore=0` puts them back into measurement. The marker is a first-party `qm_ignore` cookie of the site (`path=/`, `samesite=lax`, `secure` over https, five years), doubled in `localStorage` by the embedded tracker; it holds no identifier, is never transmitted to Quiet Metrics, and exists only to stop measurement. One visit covers all three collection modes, script, server, or both. It does not replace the excluded roles and paths: those belong to the administrator, this one belongs to the visitor.
+
+### Changed
+- The published promise is now "no identification or tracking cookies" rather than "cookie-free". Nothing is stored on the visitor's device in order to measure them; the one exception is the opt-out marker, which they store themselves and which is exempt from consent as an expression of refusal.
+
 ## [0.1.1] - 2026-08-27
 
 Artwork only. The plugin code is unchanged since 0.1.0.

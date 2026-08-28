@@ -8,15 +8,16 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Mesure d'audience sans cookies pour WordPress : script first-party, tracking serveur imblocable, ou les deux.
+Mesure d'audience sans cookie de pistage pour WordPress : script first-party, tracking serveur imblocable, ou les deux.
 
 == Description ==
 
-Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quiet Metrics, édité par La Boîte à Code. La mesure se fait sans cookie et sans stockage chez le visiteur : pas de bannière de consentement dédiée à l'analytics.
+Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quiet Metrics, édité par La Boîte à Code. La mesure se fait sans cookie d'identification ni de traçabilité : rien n'est écrit chez le visiteur pour le compter, ni cookie, ni localStorage, ni empreinte persistante. La seule écriture possible est le marqueur d'exclusion que le visiteur pose lui-même pour cesser d'être compté (voir la FAQ). Cette absence de cookie de mesure ne vaut pas à elle seule exemption de consentement : évaluez vos finalités, les fonctions activées et votre base légale.
 
 * **Mode script (first-party)** : le fichier qm.js est une copie locale servie par votre propre site, et les hits transiteraient par la REST API de votre site (route quiet-metrics/v1/collect) avant d'être relayés au service. Aucun domaine tiers côté navigateur. Ce mode n'est pas encore disponible : le relais exigerait une signature du site qui n'est pas encore implémentée, quelle que soit la clé secrète renseignée (voir la FAQ ci-dessous). Utilisez le mode serveur en attendant.
 * **Mode serveur (imblocable)** : les pages vues sont envoyées par PHP en fin de requête, sans JavaScript. Invisible pour les bloqueurs de publicité. Avec la clé secrète, les hits sont signés (HMAC) et le service prend en compte l'IP et le navigateur du visiteur.
 * **Exclusions** : rôles connectés (administrateurs et éditeurs par défaut) et préfixes de chemins (un par ligne).
+* **Exclusion à la demande du visiteur** : une visite sur `?qm_ignore=1` et il cesse d'être compté, `?qm_ignore=0` le remet dans la mesure. Rien à régler : le plugin s'en charge pour les trois modes de collecte.
 * **Événements personnalisés** : qm('inscription', {plan: 'pro'}) côté navigateur, quiet_metrics_event('achat', array('montant' => 49)) côté PHP.
 
 = Service externe =
@@ -36,7 +37,17 @@ Aucune donnée n'est envoyée tant que la clé publique du site n'est pas rensei
 
 = Le plugin dépose-t-il des cookies ? =
 
-Non. Ni cookie, ni localStorage, ni empreinte persistante côté visiteur. Voir la documentation du service pour le détail de la méthode de comptage.
+Aucun pour mesurer. Ni cookie, ni localStorage, ni empreinte persistante ne sont écrits chez le visiteur pour le compter : le comptage repose sur une empreinte pseudonyme quotidienne calculée par le service, jamais stockée sur l'appareil.
+
+La seule écriture possible est le marqueur d'exclusion, et c'est le visiteur qui la demande : en chargeant n'importe quelle page de votre site avec `?qm_ignore=1`, il cesse d'être compté ; avec `?qm_ignore=0`, il revient dans la mesure. Le marqueur est alors un cookie propriétaire de votre site, nommé `qm_ignore` et valant `1` (`path=/`, `samesite=lax`, `secure` en https, cinq ans), doublé en `localStorage` par le tracker. Il ne contient aucun identifiant, sa valeur étant la même chez tout le monde, il n'est jamais transmis à Quiet Metrics, et il n'existe que pour arrêter la mesure : c'est un marqueur de refus, pas un traceur.
+
+Voir la documentation du service pour le détail de la méthode de comptage.
+
+= Un visiteur peut-il demander à ne plus être compté ? =
+
+Oui, sans compte et sans écrire à personne : il charge n'importe quelle page de votre site avec `?qm_ignore=1` (par exemple `https://votresite.fr/?qm_ignore=1`) et il cesse d'être compté ; `?qm_ignore=0` le remet dans la mesure. Une seule visite couvre les trois modes de collecte, script, serveur ou les deux. C'est aussi le moyen le plus simple de vous exclure vous-même de vos propres statistiques, depuis n'importe quel navigateur.
+
+Cela ne remplace pas les rôles et les chemins exclus des réglages : ceux-là appartiennent à l'administrateur du site, le marqueur appartient au visiteur.
 
 = À quoi sert la clé secrète ? =
 
