@@ -1,10 +1,16 @@
 /*!
- * Quiet Metrics qm.js : tracker d'audience sans cookies.
+ * Quiet Metrics qm.js : tracker d'audience sans cookie de pistage.
  * (c) La Boîte à Code (laboiteacode.fr) · https://quietmetrics.dev · Licence MIT.
  * Source de vérité : packages/tracker-js/tracker.js (la copie servie est resynchronisée).
- * Cible : < 2 Ko min+gzip. ES5, aucun build requis.
+ * Servi TEL QUEL, sans minification : environ 3,7 Ko compresses, pour un
+ * plafond annonce de 4 Ko. Les commentaires partent donc chez chaque
+ * visiteur : les garder courts n'est pas une coquetterie de style.
+ * ES5, aucun build requis.
  *
- * Aucune donnée n'est stockée chez le visiteur (ni cookie, ni localStorage).
+ * Aucun cookie d'identification ni de traçabilité : rien n'est écrit chez le
+ * visiteur POUR LE MESURER. La seule exception est le marqueur d'exclusion
+ * `qm_ignore`, posé à la demande de la personne pour qu'on cesse de la
+ * compter, qui ne contient aucun identifiant et ne nous est jamais transmis.
  * Spec du payload : docs/05-api-et-sdk.md
  */
 (function (win, doc) {
@@ -45,10 +51,48 @@
   function trim(s) { return s.replace(/^\s+|\s+$/g, ''); }
   function warn(m) { if (win.console && console.warn) console.warn('[quietmetrics] ' + m); }
 
+  /* -- Marqueur d'exclusion -------------------------------------------------
+   * Le SEUL stockage que ce traceur écrive, et il sert à NE PAS compter.
+   * Posé par la personne elle-même en visitant ?qm_ignore=1, retiré par
+   * ?qm_ignore=0. Il ne contient aucun identifiant, n'est jamais transmis à
+   * Quiet Metrics, et n'existe que pour arrêter la mesure : c'est ce qui le
+   * sépare d'un cookie d'identification ou de traçabilité, et ce qui le rend
+   * exempté de consentement (c'est le marqueur de refus).
+   *
+   * Écrit des DEUX côtés à dessein : le cookie est le seul marqueur que les
+   * SDK serveur sachent lire, et localStorage prend le relais là où le cookie
+   * est refusé ou expiré. Une seule visite couvre donc les deux modes de
+   * suivi, y compris le mode « les deux » du plugin WordPress.
+   */
+
+  function marked() {
+    try {
+      if (win.localStorage && win.localStorage.getItem('qm_ignore') === '1') return true;
+    } catch (e) {}
+    return /(?:^|;\s*)qm_ignore=1(?:\s*;|\s*$)/.test(doc.cookie);
+  }
+
+  function mark(on) {
+    try {
+      if (win.localStorage) {
+        if (on) win.localStorage.setItem('qm_ignore', '1');
+        else win.localStorage.removeItem('qm_ignore');
+      }
+    } catch (e) {}
+    // Cinq ans, ou une expiration immédiate pour retirer le marqueur.
+    doc.cookie = 'qm_ignore=' + (on ? '1' : '') + ';path=/;max-age=' +
+      (on ? 157680000 : 0) + ';samesite=lax' +
+      (loc.protocol === 'https:' ? ';secure' : '');
+  }
+
+  var signal = /[?&]qm_ignore=([01])(?:&|$)/.exec(loc.search);
+  if (signal) mark(signal[1] === '1');
+
   /* -- Garde-fous --------------------------------------------------------- */
 
   function shouldIgnore() {
     if (win.__qmDisable) return true;                    // kill switch manuel
+    if (marked()) return true;                           // refus posé par la personne
     if (nav.webdriver) return true;                      // navigateurs pilotés
     if (respectDnt && (nav.doNotTrack === '1' || nav.globalPrivacyControl)) return true;
     if (!devMode && (loc.protocol === 'file:' ||

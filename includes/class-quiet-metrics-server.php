@@ -42,12 +42,17 @@ class Quiet_Metrics_Server {
 	}
 
 	/**
-	 * Exclusions : admin, AJAX, cron, REST, XML-RPC, prévisualisations, flux,
-	 * robots, rôle exclu, chemin exclu.
+	 * Exclusions : marqueur de refus, admin, AJAX, cron, REST, XML-RPC,
+	 * prévisualisations, flux, robots, rôle exclu, chemin exclu.
 	 *
 	 * @return bool
 	 */
 	private function is_trackable_request() {
+		// Le refus de la personne prime sur tout le reste : le marqueur
+		// d'exclusion n'existe que pour arrêter la mesure.
+		if ( quiet_metrics_visitor_opted_out() ) {
+			return false;
+		}
 		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() ) {
 			return false;
 		}

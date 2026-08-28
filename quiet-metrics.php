@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Quiet Metrics
  * Plugin URI:        https://quietmetrics.dev
- * Description:       Mesure d'audience sans cookies pour WordPress : script first-party, tracking serveur imblocable, ou les deux. Les données de mesure sont envoyées au service Quiet Metrics configuré dans les réglages.
+ * Description:       Mesure d'audience sans cookie de pistage pour WordPress : script first-party, tracking serveur imblocable, ou les deux. Les données de mesure sont envoyées au service Quiet Metrics configuré dans les réglages.
  * Version:           0.1.1
  * Requires at least: 5.5
  * Requires PHP:      7.4
@@ -114,6 +114,57 @@ function quiet_metrics_user_is_excluded() {
 }
 
 /**
+ * Charge le SDK embarqué, une seule fois par requête.
+ *
+ * @return void
+ */
+function quiet_metrics_require_client() {
+	if ( ! class_exists( 'QuietMetrics\\Client' ) ) {
+		require_once QUIET_METRICS_PLUGIN_DIR . 'includes/Client.php';
+	}
+}
+
+/**
+ * Marqueur d'exclusion : pose ou retrait demandé par l'URL courante.
+ *
+ * La personne se retire elle-même de la mesure en visitant n'importe quelle
+ * URL du site avec ?qm_ignore=1, et y revient avec ?qm_ignore=0. Le marqueur
+ * ne contient aucun identifiant, n'est jamais transmis à Quiet Metrics, et
+ * n'existe que pour ARRÊTER la mesure : c'est le marqueur de refus, et c'est
+ * ce qui le sépare d'un cookie d'identification ou de traçabilité.
+ *
+ * Branché sur init, donc avant template_redirect (où se décide la mesure) et
+ * avant tout envoi de sortie : poser un cookie écrit un en-tête HTTP, et il
+ * serait trop tard une fois le gabarit commencé.
+ *
+ * @return void
+ */
+function quiet_metrics_handle_opt_out() {
+	quiet_metrics_require_client();
+	\QuietMetrics\Client::handleOptOutRequest();
+}
+add_action( 'init', 'quiet_metrics_handle_opt_out' );
+
+/**
+ * Le visiteur a-t-il posé le marqueur d'exclusion ?
+ *
+ * Le mode script pose la même question côté navigateur (assets/qm.js) : les
+ * deux modes doivent honorer le même refus, sinon une seule visite en
+ * ?qm_ignore=1 n'arrêterait que la moitié de la mesure.
+ *
+ * @return bool
+ */
+function quiet_metrics_visitor_opted_out() {
+	quiet_metrics_require_client();
+
+	$marker = isset( $_COOKIE[ \QuietMetrics\Client::OPT_OUT_MARKER ] )
+		? sanitize_text_field( wp_unslash( $_COOKIE[ \QuietMetrics\Client::OPT_OUT_MARKER ] ) )
+		: null;
+
+	return \QuietMetrics\Client::isOptedOut( $marker );
+}
+
+/**
  * Client du SDK embarqué, configuré depuis les réglages.
  *
  * Retourne null tant que la clé publique n'est pas renseignée : rien
@@ -126,9 +177,7 @@ function quiet_metrics_client() {
 	if ( '' === $settings['site_key'] ) {
 		return null;
 	}
-	if ( ! class_exists( 'QuietMetrics\\Client' ) ) {
-		require_once QUIET_METRICS_PLUGIN_DIR . 'includes/Client.php';
-	}
+	quiet_metrics_require_client();
 	return new \QuietMetrics\Client(
 		$settings['site_key'],
 		'' !== $settings['secret_key'] ? $settings['secret_key'] : null,
