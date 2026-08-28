@@ -3,6 +3,15 @@
 All notable changes to the Quiet Metrics WordPress plugin are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org).
 
+## [0.3.0] - 2026-08-28
+
+### Added
+- **Visit continuity cookie.** The visitor fingerprint is recomputed on every hit from the subscriber network and the browser. When that network changes MID-VISIT (switching from mobile data to wifi), the fingerprint changes and the same person was counted as two unique visitors on the same day. `qm_visit` closes that: a first-party cookie of the tracked site, value `1`, sliding ten-minute window refreshed on each hit (`path=/`, `samesite=lax`, `secure` over https). It holds no identifier, its value being the same for everyone, and it is never set for someone who has opted out. Only its presence travels, as the `c` boolean of the payload.
+
+### Changed
+- The visit window is opened on `template_redirect`, before any output, and its previous state is carried to the hit sent on `shutdown`.
+- `QUIET_METRICS_VERSION` had stayed at `0.1.1` while the plugin header announced `0.2.0`. That constant is the cache-busting key of `assets/qm.js`: browsers kept serving the tracker they already had. The three declarations now agree and a test holds them together.
+
 ## [0.2.0] - 2026-08-28
 
 Full pre-publication review pending (the core PHP SDK and the Laravel bridge already went through theirs); the embedded tracker copy must be resynchronised with its source as part of it.

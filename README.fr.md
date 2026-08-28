@@ -85,6 +85,14 @@ Il ne contient aucun identifiant (sa valeur est la même chez tout le monde), il
 
 Cela ne remplace pas les rôles et les chemins exclus des réglages : ceux-là appartiennent à l'administrateur du site, le marqueur appartient au visiteur.
 
+## Continuité de visite
+
+Quand l'empreinte visiteur change en cours de visite (4G puis wifi), la même personne compterait sinon pour deux visiteurs uniques le même jour. Un second **cookie propriétaire de votre site** ferme cet écart : `qm_visit`, valant `1` (`path=/`, `samesite=lax`, `secure` en https), sur une fenêtre glissante de dix minutes repoussée à chaque hit mesuré. Chaque hit reporte dans la clé `c` du payload s'il était déjà là.
+
+Sa valeur est constante, la même chez tout le monde : elle n'identifie personne, elle dit seulement qu'une visite est déjà en cours sur ce navigateur. Il n'est jamais écrit chez quelqu'un qui a posé le marqueur d'exclusion, ni quand rien n'est mesuré. Le plugin s'en charge sans réglage à toucher, en mode serveur comme en mode script.
+
+À savoir si votre site est mis en cache : une réponse mesurée porte désormais un en-tête `Set-Cookie`, que certains reverse proxys et CDN prennent comme une raison de ne pas stocker la réponse.
+
 ## Comment ça marche
 
 - Sont ignorés en mode serveur : requêtes admin, AJAX, cron, REST, XML-RPC, prévisualisations, flux, robots, rôles exclus et chemins exclus. En mode script, les rôles exclus ne reçoivent pas le script et les chemins exclus sont passés au tracker via `data-exclude`.

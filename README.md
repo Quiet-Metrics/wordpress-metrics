@@ -85,6 +85,14 @@ It holds no identifier (its value is the same for everyone), it is never transmi
 
 This does not replace the excluded roles and paths in the settings: those belong to the site administrator, the marker belongs to the visitor.
 
+## Visit continuity
+
+When the visitor fingerprint changes mid-visit (4G, then wifi), the same person would otherwise be counted as two unique visitors on the same day. A second **first-party cookie of your own site** closes that gap: `qm_visit`, value `1` (`path=/`, `samesite=lax`, `secure` over https), on a sliding ten-minute window pushed back by every measured hit. Each hit reports whether it was already there as the `c` key of the payload.
+
+Its value is a constant, the same for everyone, so it identifies nobody: it only says that a visit is already under way in this browser. It is never written to someone who has set the opt-out marker, and never written when nothing is measured. The plugin takes care of it with no setting to touch, in server mode as in script mode.
+
+Note for cached sites: a measured response now carries a `Set-Cookie` header, which some reverse proxies and CDNs treat as a reason not to store the response.
+
 ## How it works
 
 - Ignored in server mode: admin, AJAX, cron, REST, XML-RPC requests, previews, feeds, robots, excluded roles and excluded paths. In script mode, excluded roles never receive the script and excluded paths are passed to the tracker via `data-exclude`.

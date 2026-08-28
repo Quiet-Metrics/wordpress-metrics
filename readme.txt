@@ -3,7 +3,7 @@ Contributors: quietmetrics
 Tags: analytics, statistiques, audience, rgpd, privacy
 Requires at least: 5.5
 Tested up to: 6.8
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -12,7 +12,7 @@ Mesure d'audience sans cookie de pistage pour WordPress : script first-party, tr
 
 == Description ==
 
-Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quiet Metrics, édité par La Boîte à Code. La mesure se fait sans cookie d'identification ni de traçabilité : rien n'est écrit chez le visiteur pour le compter, ni cookie, ni localStorage, ni empreinte persistante. La seule écriture possible est le marqueur d'exclusion que le visiteur pose lui-même pour cesser d'être compté (voir la FAQ). Cette absence de cookie de mesure ne vaut pas à elle seule exemption de consentement : évaluez vos finalités, les fonctions activées et votre base légale.
+Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quiet Metrics, édité par La Boîte à Code. La mesure se fait sans cookie d'identification ni de traçabilité : rien de ce qui est écrit chez le visiteur ne le distingue de quiconque, et aucun identifiant ni empreinte persistante n'est posé sur son appareil. Deux cookies existent, valant `1` chez tout le monde : le marqueur d'exclusion, que le visiteur pose lui-même pour cesser d'être compté, et un cookie de continuité de visite de dix minutes, qui dit seulement qu'une visite est déjà en cours (voir la FAQ). Cette absence de cookie de mesure ne vaut pas à elle seule exemption de consentement : évaluez vos finalités, les fonctions activées et votre base légale.
 
 * **Mode script (first-party)** : le fichier qm.js est une copie locale servie par votre propre site, et les hits transiteraient par la REST API de votre site (route quiet-metrics/v1/collect) avant d'être relayés au service. Aucun domaine tiers côté navigateur. Ce mode n'est pas encore disponible : le relais exigerait une signature du site qui n'est pas encore implémentée, quelle que soit la clé secrète renseignée (voir la FAQ ci-dessous). Utilisez le mode serveur en attendant.
 * **Mode serveur (imblocable)** : les pages vues sont envoyées par PHP en fin de requête, sans JavaScript. Invisible pour les bloqueurs de publicité. Avec la clé secrète, les hits sont signés (HMAC) et le service prend en compte l'IP et le navigateur du visiteur.
@@ -37,9 +37,11 @@ Aucune donnée n'est envoyée tant que la clé publique du site n'est pas rensei
 
 = Le plugin dépose-t-il des cookies ? =
 
-Aucun pour mesurer. Ni cookie, ni localStorage, ni empreinte persistante ne sont écrits chez le visiteur pour le compter : le comptage repose sur une empreinte pseudonyme quotidienne calculée par le service, jamais stockée sur l'appareil.
+Deux, et aucun des deux n'identifie qui que ce soit : leur valeur est la même chez tout le monde. Aucun identifiant ni empreinte persistante n'est écrit sur l'appareil, le comptage reposant sur une empreinte pseudonyme quotidienne calculée par le service et jamais stockée chez le visiteur.
 
-La seule écriture possible est le marqueur d'exclusion, et c'est le visiteur qui la demande : en chargeant n'importe quelle page de votre site avec `?qm_ignore=1`, il cesse d'être compté ; avec `?qm_ignore=0`, il revient dans la mesure. Le marqueur est alors un cookie propriétaire de votre site, nommé `qm_ignore` et valant `1` (`path=/`, `samesite=lax`, `secure` en https, cinq ans), doublé en `localStorage` par le tracker. Il ne contient aucun identifiant, sa valeur étant la même chez tout le monde, il n'est jamais transmis à Quiet Metrics, et il n'existe que pour arrêter la mesure : c'est un marqueur de refus, pas un traceur.
+Le premier est le marqueur d'exclusion, et c'est le visiteur qui le demande : en chargeant n'importe quelle page de votre site avec `?qm_ignore=1`, il cesse d'être compté ; avec `?qm_ignore=0`, il revient dans la mesure. Le marqueur est alors un cookie propriétaire de votre site, nommé `qm_ignore` et valant `1` (`path=/`, `samesite=lax`, `secure` en https, cinq ans), doublé en `localStorage` par le tracker. Il ne contient aucun identifiant, sa valeur étant la même chez tout le monde, il n'est jamais transmis à Quiet Metrics, et il n'existe que pour arrêter la mesure : c'est un marqueur de refus, pas un traceur.
+
+Le second est le cookie de continuité de visite, posé par la mesure : `qm_visit`, valant `1` (`path=/`, `samesite=lax`, `secure` en https, dix minutes repoussées à chaque page vue). Il évite de compter deux visiteurs uniques pour une seule personne dont la connexion change en cours de visite (4G puis wifi). Sa valeur étant la même chez tout le monde, il n'identifie personne ; seule sa présence remonte, sous la forme d'un booléen dans le hit. Il n'est jamais posé chez un visiteur qui a mis le marqueur d'exclusion, ni sur une requête qui n'est pas mesurée. Il ne relève pas du même régime que le marqueur de refus : c'est un cookie de mesure d'audience, à traiter comme tel dans votre politique de cookies.
 
 Voir la documentation du service pour le détail de la méthode de comptage.
 
