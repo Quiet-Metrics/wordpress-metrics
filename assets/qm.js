@@ -2,15 +2,15 @@
  * Quiet Metrics qm.js : tracker d'audience sans cookie de pistage.
  * (c) La Boîte à Code (laboiteacode.fr) · https://quietmetrics.dev · Licence MIT.
  * Source de vérité : packages/tracker-js/tracker.js (la copie servie est resynchronisée).
- * Servi TEL QUEL, sans minification : environ 3,7 Ko compresses, pour un
+ * Servi TEL QUEL, sans minification : environ 3,9 Ko compresses, pour un
  * plafond annonce de 4 Ko. Les commentaires partent donc chez chaque
  * visiteur : les garder courts n'est pas une coquetterie de style.
  * ES5, aucun build requis.
  *
- * Aucun cookie d'identification ni de traçabilité : rien n'est écrit chez le
- * visiteur POUR LE MESURER. La seule exception est le marqueur d'exclusion
- * `qm_ignore`, posé à la demande de la personne pour qu'on cesse de la
- * compter, qui ne contient aucun identifiant et ne nous est jamais transmis.
+ * Aucun cookie d'identification ni de traçabilité : les deux cookies écrits
+ * valent la même chose chez tout le monde, ils ne distinguent personne.
+ * `qm_ignore` est le marqueur de refus, posé par la personne et jamais
+ * transmis ; `qm_visit` dit qu'une visite est en cours sur ce navigateur.
  * Spec du payload : docs/05-api-et-sdk.md
  */
 (function (win, doc) {
@@ -52,8 +52,8 @@
   function warn(m) { if (win.console && console.warn) console.warn('[quietmetrics] ' + m); }
 
   /* -- Marqueur d'exclusion -------------------------------------------------
-   * Le SEUL stockage que ce traceur écrive, et il sert à NE PAS compter.
-   * Posé par la personne elle-même en visitant ?qm_ignore=1, retiré par
+   * Le seul écrit que ce traceur fasse à la demande de la personne, et il
+   * sert à NE PAS compter. Posé en visitant ?qm_ignore=1, retiré par
    * ?qm_ignore=0. Il ne contient aucun identifiant, n'est jamais transmis à
    * Quiet Metrics, et n'existe que pour arrêter la mesure : c'est ce qui le
    * sépare d'un cookie d'identification ou de traçabilité, et ce qui le rend
@@ -88,6 +88,19 @@
   var signal = /[?&]qm_ignore=([01])(?:&|$)/.exec(loc.search);
   if (signal) mark(signal[1] === '1');
 
+  /* -- Continuité de visite -------------------------------------------------
+   * `qm_visit=1` dit qu'une visite est en cours sur ce navigateur, ce que le
+   * hit reporte dans `c` : sans lui, une empreinte qui change en cours de
+   * visite (4G puis wifi) compte deux visiteurs pour une personne. Fenêtre
+   * glissante de 10 minutes, lue avant d'être repoussée, jamais chez un exclu.
+   */
+  function openVisit() {
+    var ongoing = /(?:^|;\s*)qm_visit=1(?:\s*;|\s*$)/.test(doc.cookie);
+    doc.cookie = 'qm_visit=1;path=/;max-age=600;samesite=lax' +
+      (loc.protocol === 'https:' ? ';secure' : '');
+    return ongoing;
+  }
+
   /* -- Garde-fous --------------------------------------------------------- */
 
   function shouldIgnore() {
@@ -119,6 +132,7 @@
     };
     if (name) payload.n = String(name).slice(0, 120);
     if (props) payload.p = props;
+    if (openVisit()) payload.c = 1;   // une visite était déjà en cours ici
 
     var body = JSON.stringify(payload);
     if (nav.sendBeacon && nav.sendBeacon(endpoint, body)) return;  // survit au unload

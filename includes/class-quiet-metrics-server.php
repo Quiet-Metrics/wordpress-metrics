@@ -19,6 +19,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Quiet_Metrics_Server {
 
 	/**
+	 * Une visite était-elle déjà en cours sur ce navigateur au moment du hit ?
+	 *
+	 * Retenu sur template_redirect, où la fenêtre de visite est ouverte ou
+	 * prolongée, et transmis au hit qui part sur shutdown : le cookie qu'on
+	 * vient d'écrire ne doit pas se relire lui-même, sinon chaque hit se
+	 * déclarerait en visite continue.
+	 *
+	 * @var bool
+	 */
+	private $visit_ongoing = false;
+
+	/**
 	 * Branche le hook si le mode serveur est actif et la clé publique posée.
 	 */
 	public function __construct() {
@@ -32,12 +44,20 @@ class Quiet_Metrics_Server {
 	/**
 	 * Programme l'envoi en shutdown si la requête correspond à un vrai visiteur.
 	 *
+	 * La fenêtre de continuité de visite s'ouvre ICI et pas sur shutdown :
+	 * shutdown s'exécute après l'envoi du gabarit, il y serait trop tard pour
+	 * un Set-Cookie. Elle n'est ouverte que pour un hit mesuré, donc jamais
+	 * chez quelqu'un qui a posé le marqueur d'exclusion : is_trackable_request()
+	 * a déjà rendu la main, et handleVisitRequest() le revérifie.
+	 *
 	 * @return void
 	 */
 	public function maybe_queue_pageview() {
 		if ( ! $this->is_trackable_request() ) {
 			return;
 		}
+		quiet_metrics_require_client();
+		$this->visit_ongoing = \QuietMetrics\Client::handleVisitRequest();
 		add_action( 'shutdown', array( $this, 'send_pageview' ), 0 );
 	}
 
@@ -89,13 +109,18 @@ class Quiet_Metrics_Server {
 	 * repli cURL court). Le contexte (URL, referrer, IP et User-Agent du
 	 * visiteur, langue) est déduit de la requête courante par le SDK.
 	 *
+	 * La continuité de visite est transmise explicitement plutôt que relue par
+	 * le SDK : les deux donneraient la même réponse, handleVisitRequest() ne
+	 * touchant pas à `$_COOKIE`, mais la passer rend visible que la valeur date
+	 * d'AVANT l'ouverture de la fenêtre, et non d'après.
+	 *
 	 * @return void
 	 */
 	public function send_pageview() {
 		try {
 			$client = quiet_metrics_client();
 			if ( null !== $client ) {
-				$client->pageview();
+				$client->pageview( array( 'visit' => $this->visit_ongoing ) );
 			}
 		} catch ( \Throwable $e ) {
 			// Silencieux par contrat : l'analytics ne casse jamais le site hôte.
