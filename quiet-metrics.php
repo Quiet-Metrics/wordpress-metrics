@@ -3,7 +3,7 @@
  * Plugin Name:       Quiet Metrics
  * Plugin URI:        https://quietmetrics.dev
  * Description:       Mesure d'audience sans cookie de pistage pour WordPress : script first-party, tracking serveur imblocable, ou les deux. Les données de mesure sont envoyées au service Quiet Metrics configuré dans les réglages.
- * Version:           0.3.0
+ * Version:           0.4.0
  * Requires at least: 5.5
  * Requires PHP:      7.4
  * Author:            La Boîte à Code
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'QUIET_METRICS_VERSION', '0.3.0' );
+define( 'QUIET_METRICS_VERSION', '0.4.0' );
 define( 'QUIET_METRICS_PLUGIN_FILE', __FILE__ );
 define( 'QUIET_METRICS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QUIET_METRICS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -42,6 +42,7 @@ function quiet_metrics_default_settings() {
 		'mode'           => 'script',
 		'excluded_roles' => array( 'administrator', 'editor' ),
 		'excluded_paths' => '',
+		'track_404'      => false,
 	);
 }
 

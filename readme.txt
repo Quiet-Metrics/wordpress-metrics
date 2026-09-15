@@ -3,7 +3,7 @@ Contributors: quietmetrics
 Tags: analytics, statistiques, audience, rgpd, privacy
 Requires at least: 5.5
 Tested up to: 6.8
-Stable tag: 0.3.0
+Stable tag: 0.4.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -64,6 +64,10 @@ Oui. Les rôles cochés dans les réglages (administrateurs et éditeurs par dé
 Non : le service déduplique les hits identiques rapprochés (même page, même visiteur, moins de 2 secondes d'écart).
 
 == Changelog ==
+
+= 0.4.0 =
+* Server pageviews use a shared HTML response policy, including rendered error pages.
+* Optional 404 events, disabled by default. Embedded PHP SDK 0.4.0.
 
 = 0.1.1 =
 * Bannière, visuels du répertoire et icône repris à la charte Quiet Metrics.

@@ -3,6 +3,17 @@
 All notable changes to the Quiet Metrics WordPress plugin are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org).
 
+## [0.4.0] - 2026-09-15
+
+### Fixed
+- Automatic server tracking excludes non-GET requests, announced prefetches, redirects, empty responses, non-HTML content and attachments. Rendered HTML/XHTML 4xx/5xx error pages count as pageviews.
+
+### Added
+- Optional “Pages introuvables” setting: records a `404` event alongside the pageview in server mode. Disabled by default; each additional event consumes quota. Do not also enable JavaScript `data-404` on the same page.
+
+### Changed
+- Embedded PHP client updated to 0.4.0. The script relay remains unavailable; this release does not enable it.
+
 ## [0.3.0] - 2026-08-28
 
 ### Added

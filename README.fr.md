@@ -108,3 +108,9 @@ Le dossier [`.wordpress-org/`](.wordpress-org/) contient les visuels aux formats
 GPLv2 ou ultérieure (exigence du répertoire wordpress.org). Le SDK embarqué provient du package `quiet-metrics/php-metrics`, publié sous licence MIT, compatible GPL.
 
 Un plugin [La Boîte à Code](https://laboiteacode.fr) pour [Quiet Metrics](https://quietmetrics.dev).
+
+## Pages vues et erreurs (0.4.0)
+
+Les pages vues automatiques sont les documents HTML/XHTML affichés en réponse à un `GET`, y compris les erreurs 404/500. Les redirections, réponses vides (204/205), PDF, JSON et pièces jointes sont exclus, ainsi que l’AJAX, les préchargements annoncés et les visiteurs exclus.
+
+À partir de la version **0.4.0**, `Pages introuvables` active en plus un événement `404` avec le chemin de la page. Cette option est désactivée par défaut : chaque événement supplémentaire consomme le quota. Activez-la côté serveur ou via `data-404` dans le script sur une même page, pour éviter un double événement. Le suivi ne voit pas les pages servies par un cache qui contourne PHP.

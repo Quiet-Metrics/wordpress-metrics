@@ -57,6 +57,9 @@ class Quiet_Metrics_Server {
 			return;
 		}
 		quiet_metrics_require_client();
+		if ( ! $this->is_html_response() || \QuietMetrics\Client::announcesPrefetch( $_SERVER['HTTP_SEC_PURPOSE'] ?? null, $_SERVER['HTTP_PURPOSE'] ?? null, $_SERVER['HTTP_X_MOZ'] ?? null ) ) {
+			return;
+		}
 		$this->visit_ongoing = \QuietMetrics\Client::handleVisitRequest();
 		add_action( 'shutdown', array( $this, 'send_pageview' ), 0 );
 	}
@@ -70,7 +73,7 @@ class Quiet_Metrics_Server {
 	private function is_trackable_request() {
 		// Le refus de la personne prime sur tout le reste : le marqueur
 		// d'exclusion n'existe que pour arrêter la mesure.
-		if ( quiet_metrics_visitor_opted_out() ) {
+		if ( ( $_SERVER['REQUEST_METHOD'] ?? '' ) !== 'GET' || quiet_metrics_visitor_opted_out() ) {
 			return false;
 		}
 		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() ) {
@@ -105,6 +108,25 @@ class Quiet_Metrics_Server {
 	}
 
 	/**
+	 * Même règle avant le cookie et après le rendu : un document exclu ne doit
+	 * pas faire passer la prochaine vraie page pour une visite déjà en cours.
+	 *
+	 * @return bool
+	 */
+	private function is_html_response() {
+		$content_type = null;
+		$disposition = null;
+		foreach ( headers_list() as $header ) {
+			if ( stripos( $header, 'Content-Type:' ) === 0 ) {
+				$content_type = trim( substr( $header, 13 ) );
+			} elseif ( stripos( $header, 'Content-Disposition:' ) === 0 ) {
+				$disposition = trim( substr( $header, 20 ) );
+			}
+		}
+		return \QuietMetrics\Client::isHtmlPageResponse( $_SERVER['REQUEST_METHOD'] ?? '', http_response_code() ?: 200, $content_type, $disposition );
+	}
+
+	/**
 	 * Envoi de la page vue via le client embarqué (socket fire-and-forget,
 	 * repli cURL court). Le contexte (URL, referrer, IP et User-Agent du
 	 * visiteur, langue) est déduit de la requête courante par le SDK.
@@ -118,9 +140,18 @@ class Quiet_Metrics_Server {
 	 */
 	public function send_pageview() {
 		try {
+			$status = http_response_code() ?: 200;
+			if ( ! $this->is_html_response() ) {
+				return;
+			}
 			$client = quiet_metrics_client();
 			if ( null !== $client ) {
 				$client->pageview( array( 'visit' => $this->visit_ongoing ) );
+				$settings = quiet_metrics_get_settings();
+				if ( 404 === $status && ! empty( $settings['track_404'] ) ) {
+					$path = (string) wp_parse_url( $_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH );
+					$client->event( '404', array( 'path' => $path ), array( 'visit' => $this->visit_ongoing ) );
+				}
 			}
 		} catch ( \Throwable $e ) {
 			// Silencieux par contrat : l'analytics ne casse jamais le site hôte.

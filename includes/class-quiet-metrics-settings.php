@@ -112,6 +112,13 @@ class Quiet_Metrics_Settings {
 			'quiet_metrics_section_collect'
 		);
 		add_settings_field(
+			'quiet_metrics_track_404',
+			__( 'Pages introuvables', 'quiet-metrics' ),
+			array( $this, 'render_track_404_field' ),
+			self::PAGE_SLUG,
+			'quiet_metrics_section_collect'
+		);
+		add_settings_field(
 			'quiet_metrics_excluded_roles',
 			__( 'Rôles exclus', 'quiet-metrics' ),
 			array( $this, 'render_excluded_roles_field' ),
@@ -153,6 +160,8 @@ class Quiet_Metrics_Settings {
 		$roles                   = ( isset( $input['excluded_roles'] ) && is_array( $input['excluded_roles'] ) ) ? $input['excluded_roles'] : array();
 		$roles                   = array_map( 'sanitize_key', $roles );
 		$clean['excluded_roles'] = array_values( array_intersect( $roles, array_keys( wp_roles()->roles ) ) );
+
+		$clean['track_404'] = in_array( $input['track_404'] ?? false, array( true, 1, '1' ), true );
 
 		$clean['excluded_paths'] = isset( $input['excluded_paths'] ) ? sanitize_textarea_field( $input['excluded_paths'] ) : '';
 
@@ -245,6 +254,17 @@ class Quiet_Metrics_Settings {
 		}
 		echo '</select>';
 		echo '<p class="description">' . esc_html__( 'Le mode « Script » n\'est pas encore disponible : son relais depuis votre serveur exigerait une signature qui n\'est pas encore implémentée, quelle que soit la clé secrète. Le mode « Serveur » fonctionne dès aujourd\'hui, signé avec la clé secrète ci-dessus. Avec « Les deux », seul le serveur mesure pour l\'instant ; une fois le script disponible, le service dédupliquera les pages vues reçues en double.', 'quiet-metrics' ) . '</p>';
+	}
+
+	/** @return void */
+	public function render_track_404_field() {
+		$settings = quiet_metrics_get_settings();
+		printf(
+			'<label><input type="checkbox" name="%s[track_404]" value="1"%s /> %s</label>',
+			esc_attr( self::OPTION_NAME ),
+			checked( ! empty( $settings['track_404'] ), true, false ),
+			esc_html__( 'Ajouter un événement 404 aux pages introuvables. Chaque événement utilise le quota, en plus de la page vue.', 'quiet-metrics' )
+		);
 	}
 
 	/**

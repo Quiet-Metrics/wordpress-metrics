@@ -108,3 +108,9 @@ The [`.wordpress-org/`](.wordpress-org/) folder holds the visuals in the plugin 
 GPLv2 or later (a wordpress.org directory requirement). The embedded SDK comes from the `quiet-metrics/php-metrics` package, published under the MIT license, GPL-compatible.
 
 A [La Boîte à Code](https://laboiteacode.fr) plugin for [Quiet Metrics](https://quietmetrics.dev).
+
+## Pageviews and errors (0.4.0)
+
+Automatic pageviews are HTML/XHTML documents rendered in response to a `GET`, including 404/500 errors. Redirects, empty responses (204/205), PDFs, JSON and attachments are excluded, along with AJAX, announced prefetches and opted-out visitors.
+
+From version **0.4.0**, `Pages introuvables` also emits a `404` event with the page path. This option is off by default: each additional event consumes quota. Enable it server-side or through the script’s `data-404` on a given page to avoid duplicate events. Server tracking cannot see pages served by a cache that bypasses PHP.
