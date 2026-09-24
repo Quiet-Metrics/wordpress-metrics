@@ -23,7 +23,6 @@
   var loc = win.location;
   var nav = win.navigator;
 
-  /* -- Configuration via attributs data-* du <script> ------------------- */
 
   var siteKey = script.getAttribute('data-site');
   if (!siteKey) return warn('attribut data-site manquant');
@@ -51,19 +50,6 @@
   function trim(s) { return s.replace(/^\s+|\s+$/g, ''); }
   function warn(m) { if (win.console && console.warn) console.warn('[quietmetrics] ' + m); }
 
-  /* -- Marqueur d'exclusion -------------------------------------------------
-   * Le seul écrit que ce traceur fasse à la demande de la personne, et il
-   * sert à NE PAS compter. Posé en visitant ?qm_ignore=1, retiré par
-   * ?qm_ignore=0. Il ne contient aucun identifiant, n'est jamais transmis à
-   * Quiet Metrics, et n'existe que pour arrêter la mesure : c'est ce qui le
-   * sépare d'un cookie d'identification ou de traçabilité, et ce qui le rend
-   * exempté de consentement (c'est le marqueur de refus).
-   *
-   * Écrit des DEUX côtés à dessein : le cookie est le seul marqueur que les
-   * SDK serveur sachent lire, et localStorage prend le relais là où le cookie
-   * est refusé ou expiré. Une seule visite couvre donc les deux modes de
-   * suivi, y compris le mode « les deux » du plugin WordPress.
-   */
 
   function marked() {
     try {
@@ -88,12 +74,6 @@
   var signal = /[?&]qm_ignore=([01])(?:&|$)/.exec(loc.search);
   if (signal) mark(signal[1] === '1');
 
-  /* -- Continuité de visite -------------------------------------------------
-   * `qm_visit=1` dit qu'une visite est en cours sur ce navigateur, ce que le
-   * hit reporte dans `c` : sans lui, une empreinte qui change en cours de
-   * visite (4G puis wifi) compte deux visiteurs pour une personne. Fenêtre
-   * glissante de 10 minutes, lue avant d'être repoussée, jamais chez un exclu.
-   */
   function openVisit() {
     var ongoing = /(?:^|;\s*)qm_visit=1(?:\s*;|\s*$)/.test(doc.cookie);
     doc.cookie = 'qm_visit=1;path=/;max-age=600;samesite=lax' +
@@ -101,7 +81,6 @@
     return ongoing;
   }
 
-  /* -- Garde-fous --------------------------------------------------------- */
 
   function shouldIgnore() {
     if (win.__qmDisable) return true;                    // kill switch manuel
@@ -116,9 +95,6 @@
     return false;
   }
 
-  /* -- Envoi ---------------------------------------------------------------
-   * Corps JSON en text/plain : pas de préflight CORS, compatible sendBeacon.
-   */
   function send(type, name, props) {
     if (shouldIgnore()) return;
     var payload = {
@@ -148,7 +124,6 @@
     }
   }
 
-  /* -- Pages vues ----------------------------------------------------------- */
 
   var lastPath = null;
   function pageview() {
@@ -170,7 +145,6 @@
   if (trackHash) win.addEventListener('hashchange', onNav);
   function onNav() { setTimeout(pageview, 0); }           // laisse l'URL se stabiliser
 
-  /* -- Liens sortants et téléchargements ---------------------------------- */
 
   // Liste volontairement courte : mieux vaut manquer un format exotique que
   // compter un clic de navigation comme un téléchargement.
@@ -195,16 +169,11 @@
     }, true);
   }
 
-  /* -- API publique -------------------------------------------------------------
-   * qm('nom_evenement', {prop: 'valeur'})
-   * Les appels faits avant le chargement (snippet à file d'attente) sont rejoués.
-   */
   var queued = (win.qm && win.qm.q) || [];
   win.qm = function (name, props) { if (name) send('event', name, props); };
   win.qm.pageview = pageview;
   for (var i = 0; i < queued.length; i++) win.qm.apply(null, queued[i]);
 
-  /* -- Premier hit (en ignorant le pré-rendu) ------------------------------- */
 
   // Le 404 accompagne la page vue plutôt que de la remplacer : la page d'erreur
   // reste comptée comme une page vue, et l'événement dit laquelle a manqué.
