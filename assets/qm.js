@@ -95,14 +95,17 @@
     return false;
   }
 
+  var DROPPED_PARAMS = /[?&](?!(utm_source|utm_medium|utm_campaign|ref)=)[^&]*/g;
+
   function send(type, name, props) {
     if (shouldIgnore()) return;
     var payload = {
       k: siteKey,
       t: type,                                            // 'pageview' | 'event'
       u: loc.protocol + '//' + loc.host + loc.pathname +
-         loc.search + (trackHash ? loc.hash : ''),
-      r: doc.referrer || null,
+         loc.search.replace(DROPPED_PARAMS, '').replace(/^&/, '?') +
+         (trackHash ? loc.hash : ''),
+      r: doc.referrer.replace(/^([^/]*\/\/[^/]+).*/, '$1/') || null,
       w: win.innerWidth || null,
       l: (nav.languages && nav.languages[0]) || nav.language || null
     };
@@ -156,15 +159,17 @@
       while (el && el.tagName !== 'A') el = el.parentElement;
       if (!el || !el.href || !/^https?:/.test(el.href)) return;
 
+      var url = el.protocol + '//' + el.host + el.pathname;
+
       // Un téléchargement externe n'émet qu'UN événement, jamais les deux :
       // deux événements pour un clic doubleraient la consommation de quota.
       if (trackDownloads && DOWNLOAD_EXT.test(el.pathname || '')) {
-        send('event', 'Téléchargement', { url: el.href });
+        send('event', 'Téléchargement', { url: url });
         return;
       }
 
       if (trackOutbound && el.host && el.host !== loc.host) {
-        send('event', 'Lien sortant', { url: el.href });
+        send('event', 'Lien sortant', { url: url });
       }
     }, true);
   }
