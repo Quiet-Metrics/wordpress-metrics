@@ -3,6 +3,12 @@
 All notable changes to the Quiet Metrics WordPress plugin are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org).
 
+## [0.5.0] - 2026-09-24
+
+### Changed
+- Embedded PHP client updated to 0.5.0, with its new `Tracker` interface (`includes/Tracker.php`, loaded before the client). Server mode now sends only what Quiet Metrics reads: the page address reduced to its origin, its path and its campaign parameters, and the referrer reduced to its origin.
+- Embedded tracker updated to 0.4.0: script mode applies the same rule, and outbound link and download events no longer carry the link's query string.
+
 ## [0.4.0] - 2026-09-15
 
 ### Documentation
