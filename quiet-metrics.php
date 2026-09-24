@@ -120,6 +120,12 @@ function quiet_metrics_user_is_excluded() {
  * @return void
  */
 function quiet_metrics_require_client() {
+	// L'interface d'abord : Client l'implémente, et sa déclaration échouerait
+	// sans elle. Chacune est gardée à part, car un autre plugin peut avoir
+	// chargé le SDK par Composer, dans une version avec ou sans l'interface.
+	if ( ! interface_exists( 'QuietMetrics\\Tracker' ) ) {
+		require_once QUIET_METRICS_PLUGIN_DIR . 'includes/Tracker.php';
+	}
 	if ( ! class_exists( 'QuietMetrics\\Client' ) ) {
 		require_once QUIET_METRICS_PLUGIN_DIR . 'includes/Client.php';
 	}

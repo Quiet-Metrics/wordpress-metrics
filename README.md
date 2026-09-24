@@ -20,7 +20,7 @@ Then:
 2. Open Settings > Quiet Metrics and paste the site's public key (`qm_pub_...`).
 3. Pick the collection mode.
 
-No `composer install`: `includes/Client.php` is an embedded copy of the core SDK ([php-metrics](https://github.com/Quiet-Metrics/php-metrics)) and `assets/qm.js` a copy of the tracker ([tracker-js](https://github.com/Quiet-Metrics/tracker-js)).
+No `composer install`: `includes/Client.php` and `includes/Tracker.php` are embedded copies of the core SDK ([php-metrics](https://github.com/Quiet-Metrics/php-metrics)) and `assets/qm.js` a copy of the tracker ([tracker-js](https://github.com/Quiet-Metrics/tracker-js)).
 
 ## Configuration
 

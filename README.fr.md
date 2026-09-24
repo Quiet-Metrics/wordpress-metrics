@@ -20,7 +20,7 @@ Puis :
 2. Ouvrez Réglages > Quiet Metrics et collez la clé publique du site (`qm_pub_...`).
 3. Choisissez le mode de collecte.
 
-Aucun `composer install` : `includes/Client.php` est une copie embarquée du SDK cœur ([php-metrics](https://github.com/Quiet-Metrics/php-metrics)) et `assets/qm.js` une copie du tracker ([tracker-js](https://github.com/Quiet-Metrics/tracker-js)).
+Aucun `composer install` : `includes/Client.php` et `includes/Tracker.php` sont des copies embarquées du SDK cœur ([php-metrics](https://github.com/Quiet-Metrics/php-metrics)) et `assets/qm.js` une copie du tracker ([tracker-js](https://github.com/Quiet-Metrics/tracker-js)).
 
 ## Configuration
 

@@ -14,6 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, see https://www.gnu.org/licenses/gpl-2.0.html
 
-The embedded PHP SDK (includes/Client.php) and JS tracker (assets/qm.js)
-come from the quiet-metrics/php-metrics and tracker-js packages, published
-under the MIT license, which is GPL-compatible.
+The embedded PHP SDK (includes/Client.php, includes/Tracker.php) and JS
+tracker (assets/qm.js) come from the quiet-metrics/php-metrics and
+tracker-js packages, published under the MIT license, which is
+GPL-compatible.
