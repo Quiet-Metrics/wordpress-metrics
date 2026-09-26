@@ -3,7 +3,7 @@ Contributors: quietmetrics
 Tags: analytics, statistiques, audience, rgpd, privacy
 Requires at least: 5.5
 Tested up to: 6.8
-Stable tag: 0.5.0
+Stable tag: 0.6.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -59,11 +59,18 @@ Elle permet de signer les hits (HMAC SHA-256) pour que le service fasse foi de l
 
 Oui. Les rôles cochés dans les réglages (administrateurs et éditeurs par défaut) ne sont jamais comptés, et le champ « chemins exclus » accepte un préfixe d'URL par ligne (par exemple /preprod).
 
+= Qu'est-ce que le crawl SEO ? =
+
+L'onglet SEO de Quiet Metrics n'explore que les sites qui prouvent appartenir au compte qui les a déclarés. Avec les clés publique et secrète renseignées, ajoutez `define( 'QUIET_METRICS_SEO_CRAWL', true );` dans wp-config.php (ou la variable d'environnement `QUIET_METRICS_SEO_CRAWL=true`) : le plugin sert alors cette preuve sur `/.well-known/quietmetrics.json`. Elle porte une empreinte HMAC de la clé secrète, jamais la clé elle-même. Sans ce réglage, rien n'est servi à cette adresse et aucun crawl n'a lieu.
+
 = Le mode « les deux » ne compte-t-il pas double ? =
 
 Non : le service déduplique les hits identiques rapprochés (même page, même visiteur, moins de 2 secondes d'écart).
 
 == Changelog ==
+
+= 0.6.0 =
+* SEO crawl: with `QUIET_METRICS_SEO_CRAWL` set to true (wp-config.php constant or environment variable) and the secret key filled in, the plugin serves the ownership proof at /.well-known/quietmetrics.json. Off by default. Embedded PHP SDK 0.6.0.
 
 = 0.5.0 =
 * Only what Quiet Metrics reads leaves the site: page address reduced to its origin, path and campaign parameters, referrer reduced to its origin, in both modes.

@@ -3,6 +3,14 @@
 All notable changes to the Quiet Metrics WordPress plugin are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org).
 
+## [0.6.0] - 2026-09-28
+
+### Added
+- **SEO crawl.** Defining `QUIET_METRICS_SEO_CRAWL` as `true` in `wp-config.php`, or setting the environment variable of the same name, makes the plugin serve the site ownership proof the Quiet Metrics SEO tab requires before crawling, at `/.well-known/quietmetrics.json`, answered on `init` before WordPress parses the request. It needs the public and secret keys in the settings. Off by default: nothing is served and WordPress handles the URL as usual. The constant wins over the environment variable.
+
+### Changed
+- Embedded PHP client updated to 0.6.0 (`seo_crawl` option, `siteVerificationDocument()`, `serveSiteVerification()`).
+
 ## [0.5.0] - 2026-09-24
 
 ### Changed

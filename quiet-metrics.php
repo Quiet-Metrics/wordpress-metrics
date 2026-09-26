@@ -3,7 +3,7 @@
  * Plugin Name:       Quiet Metrics
  * Plugin URI:        https://quietmetrics.dev
  * Description:       Mesure d'audience sans cookie de pistage pour WordPress : script first-party, tracking serveur imblocable, ou les deux. Les données de mesure sont envoyées au service Quiet Metrics configuré dans les réglages.
- * Version:           0.5.0
+ * Version:           0.6.0
  * Requires at least: 5.5
  * Requires PHP:      7.4
  * Author:            La Boîte à Code
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'QUIET_METRICS_VERSION', '0.5.0' );
+define( 'QUIET_METRICS_VERSION', '0.6.0' );
 define( 'QUIET_METRICS_PLUGIN_FILE', __FILE__ );
 define( 'QUIET_METRICS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QUIET_METRICS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -172,6 +172,34 @@ function quiet_metrics_visitor_opted_out() {
 }
 
 /**
+ * Le crawl SEO de Quiet Metrics est-il autorisé sur ce site ?
+ *
+ * L'onglet SEO de Quiet Metrics n'explore que les sites qui prouvent
+ * appartenir au compte qui les a déclarés. Le réglage se fait hors de
+ * l'administration, comme dans les autres SDK : la constante
+ * QUIET_METRICS_SEO_CRAWL dans wp-config.php, sinon la variable
+ * d'environnement du même nom. Éteint quand ni l'une ni l'autre n'existe.
+ *
+ * Hors de l'administration à dessein : exposer la preuve de propriété est une
+ * décision de l'hébergeur du site, pas d'un rôle éditorial.
+ *
+ * @return bool
+ */
+function quiet_metrics_seo_crawl_enabled() {
+	$value = defined( 'QUIET_METRICS_SEO_CRAWL' )
+		? constant( 'QUIET_METRICS_SEO_CRAWL' )
+		: getenv( 'QUIET_METRICS_SEO_CRAWL' );
+
+	if ( is_bool( $value ) ) {
+		return $value;
+	}
+	if ( ! is_scalar( $value ) ) {
+		return false;
+	}
+	return (bool) filter_var( (string) $value, FILTER_VALIDATE_BOOLEAN );
+}
+
+/**
  * Client du SDK embarqué, configuré depuis les réglages.
  *
  * Retourne null tant que la clé publique n'est pas renseignée : rien
@@ -188,9 +216,37 @@ function quiet_metrics_client() {
 	return new \QuietMetrics\Client(
 		$settings['site_key'],
 		'' !== $settings['secret_key'] ? $settings['secret_key'] : null,
-		array( 'endpoint' => untrailingslashit( $settings['service_url'] ) . '/api/v1/collect' )
+		array(
+			'endpoint'  => untrailingslashit( $settings['service_url'] ) . '/api/v1/collect',
+			'seo_crawl' => quiet_metrics_seo_crawl_enabled(),
+		)
 	);
 }
+
+/**
+ * Preuve de propriété du site, servie sur /.well-known/quietmetrics.json.
+ *
+ * Sans elle, la plateforme n'explore pas le site. Le document porte un HMAC
+ * de la clé secrète (jamais la clé elle-même) : seul le compte qui détient
+ * cette clé peut le produire, alors que la clé publique se lit dans le HTML.
+ *
+ * Branché sur init en priorité 0 : avant le marqueur d'exclusion, avant
+ * l'analyse de la requête par WordPress et sa redirection canonique. Ne fait
+ * rien tant que le crawl n'est pas autorisé, ni sans clé publique et clé
+ * secrète dans les réglages ; toute autre URL continue normalement.
+ *
+ * @return void
+ */
+function quiet_metrics_serve_site_verification() {
+	if ( ! quiet_metrics_seo_crawl_enabled() ) {
+		return;
+	}
+	$client = quiet_metrics_client();
+	if ( null !== $client && $client->serveSiteVerification() ) {
+		exit;
+	}
+}
+add_action( 'init', 'quiet_metrics_serve_site_verification', 0 );
 
 /**
  * Événement personnalisé côté serveur, pour les thèmes et plugins :

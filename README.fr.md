@@ -93,6 +93,18 @@ Sa valeur est constante, la même chez tout le monde : elle n'identifie personne
 
 À savoir si votre site est mis en cache : une réponse mesurée porte désormais un en-tête `Set-Cookie`, que certains reverse proxys et CDN prennent comme une raison de ne pas stocker la réponse.
 
+## Crawl SEO
+
+L'onglet SEO de Quiet Metrics n'explore qu'un site qui prouve appartenir au compte qui l'a déclaré. Avec les clés publique et secrète renseignées dans les réglages, autorisez le crawl et le plugin sert cette preuve automatiquement sur `/.well-known/quietmetrics.json`, soit dans `wp-config.php` :
+
+```php
+define( 'QUIET_METRICS_SEO_CRAWL', true );
+```
+
+soit par l'environnement du serveur : `QUIET_METRICS_SEO_CRAWL=true`. La constante l'emporte quand les deux existent. Le document vaut `{"site_verification":["<jeton>"]}`, où le jeton est un HMAC-SHA256 calculé avec la clé **secrète** (jamais la clé elle-même ; la clé publique ne conviendrait pas, puisqu'elle se lit dans le HTML de vos pages).
+
+Il est servi tôt, sur `init`, aux seuls `GET` et `HEAD` sur ce chemin exact, avec `Content-Type: application/json` et `Cache-Control: no-store`. Éteint par défaut : sans la constante ni la variable, ou sans clé secrète, le plugin ne sert rien à cette adresse, WordPress la traite comme d'habitude, et aucun crawl n'a lieu. Le réglage vit hors de l'administration à dessein : exposer la preuve est une décision de l'hébergeur du site, pas un choix éditorial. Une règle du serveur web qui bloque les chemins commençant par un point doit laisser passer `/.well-known/`.
+
 ## Comment ça marche
 
 - Sont ignorés en mode serveur : requêtes admin, AJAX, cron, REST, XML-RPC, prévisualisations, flux, robots, rôles exclus et chemins exclus. En mode script, les rôles exclus ne reçoivent pas le script et les chemins exclus sont passés au tracker via `data-exclude`.

@@ -93,6 +93,18 @@ Its value is a constant, the same for everyone, so it identifies nobody: it only
 
 Note for cached sites: a measured response now carries a `Set-Cookie` header, which some reverse proxies and CDNs treat as a reason not to store the response.
 
+## SEO crawl
+
+The SEO tab of Quiet Metrics only crawls a site that proves it belongs to the account that declared it. With the public and secret keys filled in the settings, turn the crawl on and the plugin serves that proof automatically at `/.well-known/quietmetrics.json`, either in `wp-config.php`:
+
+```php
+define( 'QUIET_METRICS_SEO_CRAWL', true );
+```
+
+or through the server environment: `QUIET_METRICS_SEO_CRAWL=true`. The constant wins when both exist. The document is `{"site_verification":["<token>"]}`, where the token is an HMAC-SHA256 computed with the **secret** key (never the key itself; the public key would not do, since it can be read in your pages' HTML).
+
+It is answered early, on `init`, to `GET` and `HEAD` on that exact path only, with `Content-Type: application/json` and `Cache-Control: no-store`. Off by default: without the constant or the variable, or without a secret key, the plugin serves nothing there, WordPress handles the URL as usual, and no crawl happens. The switch lives outside the admin screens on purpose: exposing the proof is the host's decision, not an editorial one. A web server rule that blocks paths starting with a dot must let `/.well-known/` through.
+
 ## How it works
 
 - Ignored in server mode: admin, AJAX, cron, REST, XML-RPC requests, previews, feeds, robots, excluded roles and excluded paths. In script mode, excluded roles never receive the script and excluded paths are passed to the tracker via `data-exclude`.
