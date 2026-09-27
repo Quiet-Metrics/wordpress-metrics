@@ -12,7 +12,7 @@ Mesure d'audience sans cookie de pistage pour WordPress : script first-party, tr
 
 == Description ==
 
-Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quiet Metrics, édité par La Boîte à Code. La mesure se fait sans cookie d'identification ni de traçabilité : rien de ce qui est écrit chez le visiteur ne le distingue de quiconque, et aucun identifiant ni empreinte persistante n'est posé sur son appareil. Deux cookies existent, valant `1` chez tout le monde : le marqueur d'exclusion, que le visiteur pose lui-même pour cesser d'être compté, et un cookie de continuité de visite de dix minutes, qui dit seulement qu'une visite est déjà en cours (voir la FAQ). Cette absence de cookie de mesure ne vaut pas à elle seule exemption de consentement : évaluez vos finalités, les fonctions activées et votre base légale.
+Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quiet Metrics, édité par QuietSystems. La mesure se fait sans cookie d'identification ni de traçabilité : rien de ce qui est écrit chez le visiteur ne le distingue de quiconque, et aucun identifiant ni empreinte persistante n'est posé sur son appareil. Deux cookies existent, valant `1` chez tout le monde : le marqueur d'exclusion, que le visiteur pose lui-même pour cesser d'être compté, et un cookie de continuité de visite de dix minutes, qui dit seulement qu'une visite est déjà en cours (voir la FAQ). Cette absence de cookie de mesure ne vaut pas à elle seule exemption de consentement : évaluez vos finalités, les fonctions activées et votre base légale.
 
 * **Mode script (first-party)** : le fichier qm.js est une copie locale servie par votre propre site, et les hits transiteraient par la REST API de votre site (route quiet-metrics/v1/collect) avant d'être relayés au service. Aucun domaine tiers côté navigateur. Ce mode n'est pas encore disponible : le relais exigerait une signature du site qui n'est pas encore implémentée, quelle que soit la clé secrète renseignée (voir la FAQ ci-dessous). Utilisez le mode serveur en attendant.
 * **Mode serveur (imblocable)** : les pages vues sont envoyées par PHP en fin de requête, sans JavaScript. Invisible pour les bloqueurs de publicité. Avec la clé secrète, les hits sont signés (HMAC) et le service prend en compte l'IP et le navigateur du visiteur.
@@ -24,7 +24,7 @@ Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quie
 
 Ce plugin envoie les données de mesure au service Quiet Metrics configuré dans Réglages > Quiet Metrics (par défaut https://quietmetrics.dev), sur le endpoint /api/v1/collect. Sont transmis : URL de la page vue, referrer, langue, largeur d'écran (mode script), nom et propriétés d'événement, ainsi que l'adresse IP et le User-Agent du visiteur, utilisés par le service pour la déduction technique (visiteur unique, appareil, pays) puis jetés, jamais stockés en clair.
 
-Aucune donnée n'est envoyée tant que la clé publique du site n'est pas renseignée dans les réglages. Éditeur : La Boîte à Code (https://laboiteacode.fr). Service : https://quietmetrics.dev.
+Aucune donnée n'est envoyée tant que la clé publique du site n'est pas renseignée dans les réglages. Éditeur : QuietSystems (https://quietsystems.dev). Service : https://quietmetrics.dev.
 
 == Installation ==
 

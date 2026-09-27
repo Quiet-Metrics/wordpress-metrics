@@ -4,7 +4,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-Official WordPress plugin for Quiet Metrics (La Boîte à Code): audience measurement with no identification or tracking cookies, with first-party script collection, unblockable 100% server-side tracking, or both. No Composer dependency for the end user: the PHP SDK and the JS tracker are embedded.
+Official WordPress plugin for Quiet Metrics (QuietSystems): audience measurement with no identification or tracking cookies, with first-party script collection, unblockable 100% server-side tracking, or both. No Composer dependency for the end user: the PHP SDK and the JS tracker are embedded.
 
 ## Installation
 
@@ -119,7 +119,7 @@ The [`.wordpress-org/`](.wordpress-org/) folder holds the visuals in the plugin 
 
 GPLv2 or later (a wordpress.org directory requirement). The embedded SDK comes from the `quiet-metrics/php-metrics` package, published under the MIT license, GPL-compatible.
 
-A [La Boîte à Code](https://laboiteacode.fr) plugin for [Quiet Metrics](https://quietmetrics.dev).
+A [QuietSystems](https://quietsystems.dev) plugin for [Quiet Metrics](https://quietmetrics.dev).
 
 ## Pageviews and errors (0.4.0)
 
