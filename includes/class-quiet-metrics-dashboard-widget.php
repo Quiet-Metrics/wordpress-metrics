@@ -24,6 +24,12 @@ class Quiet_Metrics_Dashboard_Widget {
 	const TOKEN_OPTION = 'quiet_metrics_read_token';
 	const CACHE_PREFIX = 'quiet_metrics_dash_';
 	const CACHE_TTL    = 600;
+
+	/**
+	 * Un échec est gardé une minute : un service en panne ou un 429 ne doit
+	 * pas coûter cinq secondes de délai à chaque affichage du tableau de bord.
+	 */
+	const FAILURE_CACHE_TTL = 60;
 	const PERIOD       = '30d';
 
 	/**
@@ -149,7 +155,7 @@ class Quiet_Metrics_Dashboard_Widget {
 	/**
 	 * Chiffres du site, depuis le cache ou l'API de lecture.
 	 *
-	 * @return array<string,mixed> Toujours un `status` : ok, not_configured, rejected, unavailable.
+	 * @return array<string,mixed> Toujours un `status` : ok, not_configured, insecure, rejected (401, 404), forbidden (403), unavailable.
 	 */
 	public function stats() {
 		$settings = quiet_metrics_get_settings();
@@ -157,6 +163,9 @@ class Quiet_Metrics_Dashboard_Widget {
 		$origin   = untrailingslashit( (string) $settings['service_url'] );
 		if ( '' === $token || '' === (string) $settings['site_key'] || '' === $origin ) {
 			return array( 'status' => 'not_configured' );
+		}
+		if ( ! self::is_secure( $origin ) ) {
+			return array( 'status' => 'insecure' );
 		}
 
 		// Empreinte et non jeton en clair dans le nom du transient.
@@ -167,11 +176,21 @@ class Quiet_Metrics_Dashboard_Widget {
 		}
 
 		$stats = $this->fetch( $origin, (string) $settings['site_key'], $token );
-		// Seul un succès est gardé : une erreur se retente au prochain affichage.
-		if ( 'ok' === $stats['status'] ) {
-			set_transient( $key, $stats, self::CACHE_TTL );
-		}
+		set_transient( $key, $stats, 'ok' === $stats['status'] ? self::CACHE_TTL : self::FAILURE_CACHE_TTL );
 		return $stats;
+	}
+
+	/**
+	 * Le jeton ne part jamais en clair : https obligatoire, sauf vers la
+	 * machine elle-même (développement local).
+	 *
+	 * @param string $origin URL du service.
+	 * @return bool
+	 */
+	public static function is_secure( $origin ) {
+		$scheme = wp_parse_url( $origin, PHP_URL_SCHEME );
+		$host   = wp_parse_url( $origin, PHP_URL_HOST );
+		return 'https' === $scheme || in_array( $host, array( 'localhost', '127.0.0.1' ), true );
 	}
 
 	/**
@@ -202,8 +221,10 @@ class Quiet_Metrics_Dashboard_Widget {
 			$response = wp_remote_get(
 				$base . $endpoint . '?' . http_build_query( $query ),
 				array(
-					'timeout' => 5,
-					'headers' => array(
+					'timeout'     => 5,
+					// Pas de redirection suivie : elle emporterait l'en-tête du jeton ailleurs.
+					'redirection' => 0,
+					'headers'     => array(
 						'Authorization' => 'Bearer ' . $token,
 						'Accept'        => 'application/json',
 					),
@@ -213,8 +234,11 @@ class Quiet_Metrics_Dashboard_Widget {
 				return array( 'status' => 'unavailable' );
 			}
 			$code = (int) wp_remote_retrieve_response_code( $response );
-			if ( in_array( $code, array( 401, 403, 404 ), true ) ) {
+			if ( in_array( $code, array( 401, 404 ), true ) ) {
 				return array( 'status' => 'rejected' );
+			}
+			if ( 403 === $code ) {
+				return array( 'status' => 'forbidden' );
 			}
 			$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 			if ( $code < 200 || $code >= 300 || ! is_array( $body ) ) {
@@ -236,6 +260,13 @@ class Quiet_Metrics_Dashboard_Widget {
 	 * @return array<string,mixed>
 	 */
 	private static function shape( array $summary, array $timeseries, array $breakdown, $origin ) {
+		// Une réponse 200 malformée vaut une panne.
+		$from = $summary['period']['from'] ?? null;
+		$to   = $summary['period']['to'] ?? null;
+		if ( ! self::is_date( $from ) || ! self::is_date( $to ) ) {
+			return array( 'status' => 'unavailable' );
+		}
+
 		// Une fenêtre précédente non mesurée n'est pas une base de comparaison.
 		$measured = false !== ( $summary['comparison']['measured'] ?? true );
 
@@ -251,10 +282,12 @@ class Quiet_Metrics_Dashboard_Widget {
 
 		$pages = array();
 		foreach ( (array) ( $breakdown['data'] ?? array() ) as $row ) {
-			$pages[] = array(
-				'label' => isset( $row['label'] ) ? (string) $row['label'] : '',
-				'value' => (int) ( $row['value'] ?? 0 ),
-			);
+			if ( is_string( $row['label'] ?? null ) ) {
+				$pages[] = array(
+					'label' => $row['label'],
+					'value' => (int) ( $row['value'] ?? 0 ),
+				);
+			}
 		}
 
 		$trend = array();
@@ -264,14 +297,25 @@ class Quiet_Metrics_Dashboard_Widget {
 
 		return array(
 			'status' => 'ok',
-			'from'   => (string) ( $summary['period']['from'] ?? '' ),
-			'to'     => (string) ( $summary['period']['to'] ?? '' ),
+			'from'   => $from,
+			'to'     => $to,
 			'kpis'   => $kpis,
 			'trend'  => $trend,
 			'pages'  => $pages,
 			'capped' => ! empty( $breakdown['capped']['any'] ),
 			'url'    => $origin . '/app',
 		);
+	}
+
+	/**
+	 * Date de l'API au format AAAA-MM-JJ, et qui existe.
+	 *
+	 * @param mixed $value Valeur reçue.
+	 * @return bool
+	 */
+	private static function is_date( $value ) {
+		return is_string( $value ) && 1 === preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m )
+			&& checkdate( (int) $m[2], (int) $m[3], (int) $m[1] );
 	}
 
 	/**
@@ -311,7 +355,9 @@ class Quiet_Metrics_Dashboard_Widget {
 		if ( 'ok' !== $stats['status'] ) {
 			$messages = array(
 				'not_configured' => __( 'Renseignez la clé publique du site et un jeton de lecture dans Réglages > Quiet Metrics pour afficher vos chiffres ici.', 'quiet-metrics' ),
-				'rejected'       => __( 'Quiet Metrics a refusé la requête : vérifiez que le jeton de lecture est toujours valide et couvre ce site.', 'quiet-metrics' ),
+				'insecure'       => __( 'L\'URL du service doit être en https : le jeton de lecture ne part jamais sur une connexion non chiffrée.', 'quiet-metrics' ),
+				'rejected'       => __( 'Quiet Metrics n\'a pas accepté le jeton de lecture : vérifiez qu\'il est toujours valide (ni expiré, ni révoqué) et que la clé publique est bien celle de ce site.', 'quiet-metrics' ),
+				'forbidden'      => __( 'Quiet Metrics a refusé l\'accès : l\'API de lecture demande le plan Pro ou Agence (ou un essai en cours), et le jeton doit couvrir ce site.', 'quiet-metrics' ),
 				'unavailable'    => __( 'Les chiffres sont indisponibles pour le moment. Réessayez dans quelques minutes.', 'quiet-metrics' ),
 			);
 			echo '<p role="status">' . esc_html( $messages[ $stats['status'] ] ?? $messages['unavailable'] ) . '</p>';

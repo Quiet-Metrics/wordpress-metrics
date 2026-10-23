@@ -109,6 +109,8 @@ It is answered early, on `init`, to `GET` and `HEAD` on that exact path only, wi
 
 With a read token, the plugin shows the site's figures in the WordPress dashboard: daily visitors (summed), page views and sessions over the last 30 days with their change on the previous period, a visitors trend, the five most viewed pages, and a link to Quiet Metrics.
 
+The read API, and so the widget, is reserved for the Pro and Agency plans and ongoing trials: on another plan, the widget says that access was refused.
+
 1. In Quiet Metrics, **Dashboard → API tokens**, create a token restricted to this site. It only reads statistics and is separate from the collection keys.
 2. Paste it in Settings > Quiet Metrics > "Jeton de lecture". The field is masked and never prints the saved token: leave it empty to keep it, or tick the box to delete it.
 

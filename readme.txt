@@ -18,7 +18,7 @@ Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quie
 * **Mode serveur (imblocable)** : les pages vues sont envoyées par PHP en fin de requête, sans JavaScript. Invisible pour les bloqueurs de publicité. Avec la clé secrète, les hits sont signés (HMAC) et le service prend en compte l'IP et le navigateur du visiteur.
 * **Exclusions** : rôles connectés (administrateurs et éditeurs par défaut) et préfixes de chemins (un par ligne).
 * **Exclusion à la demande du visiteur** : une visite sur `?qm_ignore=1` et il cesse d'être compté, `?qm_ignore=0` le remet dans la mesure. Rien à régler : le plugin s'en charge pour les trois modes de collecte.
-* **Widget du tableau de bord** : avec un jeton de lecture, les chiffres des 30 derniers jours (visiteurs par jour cumulés, pages vues, sessions, pages les plus vues) dans le tableau de bord de WordPress, pour les administrateurs.
+* **Widget du tableau de bord** : avec un jeton de lecture, les chiffres des 30 derniers jours (visiteurs par jour cumulés, pages vues, sessions, pages les plus vues) dans le tableau de bord de WordPress, pour les administrateurs. Demande un compte Quiet Metrics au plan Pro ou Agence, ou en essai.
 * **Événements personnalisés** : qm('inscription', {plan: 'pro'}) côté navigateur, quiet_metrics_event('achat', array('montant' => 49)) côté PHP.
 
 = Service externe =

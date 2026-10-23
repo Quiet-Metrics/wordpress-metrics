@@ -109,6 +109,8 @@ Il est servi tôt, sur `init`, aux seuls `GET` et `HEAD` sur ce chemin exact, av
 
 Avec un jeton de lecture, le plugin affiche les chiffres du site dans le tableau de bord de WordPress : visiteurs par jour cumulés, pages vues et sessions sur les 30 derniers jours avec leur évolution sur la période précédente, une tendance des visiteurs, les cinq pages les plus vues, et un lien vers Quiet Metrics.
 
+L'API de lecture, donc le widget, est réservée aux plans Pro et Agence et à l'essai en cours : sur un autre plan, le widget indique que l'accès a été refusé.
+
 1. Dans Quiet Metrics, **Espace membre → Jetons API**, créez un jeton restreint à ce site. Il ne fait que lire les statistiques et reste distinct des clés de collecte.
 2. Collez-le dans Réglages > Quiet Metrics > « Jeton de lecture ». Le champ est masqué et ne réaffiche jamais le jeton enregistré : laissez-le vide pour le conserver, ou cochez la case pour le supprimer.
 

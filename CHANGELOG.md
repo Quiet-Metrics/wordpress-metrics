@@ -7,7 +7,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ### Added
 - **Dashboard widget**: daily visitors (summed), page views and sessions over the last 30 days with their change on the previous period, a visitors trend, the five most viewed pages, and a link to Quiet Metrics. Shown to users with `manage_options`, filterable through `quiet_metrics_dashboard_capability`.
-- **Read token** setting, in its own option `quiet_metrics_read_token` (not autoloaded), separate from the collection keys. The field is masked and never prints the saved token; leaving it empty keeps it, a checkbox deletes it. Calls go through `wp_remote_get()` with a five-second timeout, and responses are cached ten minutes in a transient whose name is a hash. Uninstall deletes the option.
+- **Read token** setting, in its own option `quiet_metrics_read_token` (not autoloaded), separate from the collection keys. The field is masked and never prints the saved token; leaving it empty keeps it, a checkbox deletes it. Calls go through `wp_remote_get()` with a five-second timeout, and responses are cached ten minutes in a transient whose name is a hash. Uninstall deletes the option and the widget transients.
+- The widget tells an invalid or expired token (401) from a refusal (403: the read API requires the Pro or Agency plan or an ongoing trial, and the token must cover the site). It only sends the token over https (localhost excepted), never follows a redirect, keeps a failure one minute so a down service does not slow every dashboard load, and treats a malformed response as unavailable.
 
 ## [0.6.0] - 2026-09-28
 
