@@ -3,7 +3,7 @@
  * Plugin Name:       Quiet Metrics
  * Plugin URI:        https://quietmetrics.dev
  * Description:       Mesure d'audience sans cookie de pistage pour WordPress : script first-party, tracking serveur imblocable, ou les deux. Les données de mesure sont envoyées au service Quiet Metrics configuré dans les réglages.
- * Version:           0.6.0
+ * Version:           0.7.0
  * Requires at least: 5.5
  * Requires PHP:      7.4
  * Author:            QuietSystems
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'QUIET_METRICS_VERSION', '0.6.0' );
+define( 'QUIET_METRICS_VERSION', '0.7.0' );
 define( 'QUIET_METRICS_PLUGIN_FILE', __FILE__ );
 define( 'QUIET_METRICS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QUIET_METRICS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -28,6 +28,7 @@ require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-relay-poli
 require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-settings.php';
 require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-tracker.php';
 require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-server.php';
+require_once QUIET_METRICS_PLUGIN_DIR . 'includes/class-quiet-metrics-dashboard-widget.php';
 
 /**
  * Réglages par défaut : mode script, administrateurs et éditeurs exclus.
@@ -286,5 +287,8 @@ function quiet_metrics_boot() {
 	new Quiet_Metrics_Settings();
 	new Quiet_Metrics_Tracker();
 	new Quiet_Metrics_Server();
+	if ( is_admin() ) {
+		new Quiet_Metrics_Dashboard_Widget();
+	}
 }
 add_action( 'plugins_loaded', 'quiet_metrics_boot' );

@@ -105,6 +105,15 @@ soit par l'environnement du serveur : `QUIET_METRICS_SEO_CRAWL=true`. La constan
 
 Il est servi tôt, sur `init`, aux seuls `GET` et `HEAD` sur ce chemin exact, avec `Content-Type: application/json` et `Cache-Control: no-store`. Éteint par défaut : sans la constante ni la variable, ou sans clé secrète, le plugin ne sert rien à cette adresse, WordPress la traite comme d'habitude, et aucun crawl n'a lieu. Le réglage vit hors de l'administration à dessein : exposer la preuve est une décision de l'hébergeur du site, pas un choix éditorial. Une règle du serveur web qui bloque les chemins commençant par un point doit laisser passer `/.well-known/`.
 
+## Widget du tableau de bord (0.7.0)
+
+Avec un jeton de lecture, le plugin affiche les chiffres du site dans le tableau de bord de WordPress : visiteurs par jour cumulés, pages vues et sessions sur les 30 derniers jours avec leur évolution sur la période précédente, une tendance des visiteurs, les cinq pages les plus vues, et un lien vers Quiet Metrics.
+
+1. Dans Quiet Metrics, **Espace membre → Jetons API**, créez un jeton restreint à ce site. Il ne fait que lire les statistiques et reste distinct des clés de collecte.
+2. Collez-le dans Réglages > Quiet Metrics > « Jeton de lecture ». Le champ est masqué et ne réaffiche jamais le jeton enregistré : laissez-le vide pour le conserver, ou cochez la case pour le supprimer.
+
+Le jeton vit dans sa propre option, `quiet_metrics_read_token`, non autoloadée, et n'est envoyé que côté serveur à l'URL du service configurée (`wp_remote_get()`, délai de cinq secondes). Les réponses sont gardées dix minutes dans un transient dont le nom est une empreinte. Une valeur précédente `null` ou nulle se lit « Pas de comparaison », jamais une baisse ; un jeton refusé ou un service injoignable affichent un message neutre. Le widget est montré aux utilisateurs qui ont `manage_options` ; le filtre `quiet_metrics_dashboard_capability` change cette capacité.
+
 ## Comment ça marche
 
 - Sont ignorés en mode serveur : requêtes admin, AJAX, cron, REST, XML-RPC, prévisualisations, flux, robots, rôles exclus et chemins exclus. En mode script, les rôles exclus ne reçoivent pas le script et les chemins exclus sont passés au tracker via `data-exclude`.

@@ -105,6 +105,15 @@ or through the server environment: `QUIET_METRICS_SEO_CRAWL=true`. The constant 
 
 It is answered early, on `init`, to `GET` and `HEAD` on that exact path only, with `Content-Type: application/json` and `Cache-Control: no-store`. Off by default: without the constant or the variable, or without a secret key, the plugin serves nothing there, WordPress handles the URL as usual, and no crawl happens. The switch lives outside the admin screens on purpose: exposing the proof is the host's decision, not an editorial one. A web server rule that blocks paths starting with a dot must let `/.well-known/` through.
 
+## Dashboard widget (0.7.0)
+
+With a read token, the plugin shows the site's figures in the WordPress dashboard: daily visitors (summed), page views and sessions over the last 30 days with their change on the previous period, a visitors trend, the five most viewed pages, and a link to Quiet Metrics.
+
+1. In Quiet Metrics, **Dashboard → API tokens**, create a token restricted to this site. It only reads statistics and is separate from the collection keys.
+2. Paste it in Settings > Quiet Metrics > "Jeton de lecture". The field is masked and never prints the saved token: leave it empty to keep it, or tick the box to delete it.
+
+The token lives in its own option, `quiet_metrics_read_token`, not autoloaded, and is only sent server side to the configured service URL (`wp_remote_get()`, five-second timeout). Responses are kept ten minutes in a transient whose name is a hash. A previous value that is `null` or zero reads "Pas de comparaison", never a drop; a refused token or an unreachable service shows a neutral message. The widget is shown to users with `manage_options`; change it with the `quiet_metrics_dashboard_capability` filter.
+
 ## How it works
 
 - Ignored in server mode: admin, AJAX, cron, REST, XML-RPC requests, previews, feeds, robots, excluded roles and excluded paths. In script mode, excluded roles never receive the script and excluded paths are passed to the tracker via `data-exclude`.

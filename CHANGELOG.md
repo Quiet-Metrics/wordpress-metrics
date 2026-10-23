@@ -3,6 +3,12 @@
 All notable changes to the Quiet Metrics WordPress plugin are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org).
 
+## [0.7.0] - Unreleased
+
+### Added
+- **Dashboard widget**: daily visitors (summed), page views and sessions over the last 30 days with their change on the previous period, a visitors trend, the five most viewed pages, and a link to Quiet Metrics. Shown to users with `manage_options`, filterable through `quiet_metrics_dashboard_capability`.
+- **Read token** setting, in its own option `quiet_metrics_read_token` (not autoloaded), separate from the collection keys. The field is masked and never prints the saved token; leaving it empty keeps it, a checkbox deletes it. Calls go through `wp_remote_get()` with a five-second timeout, and responses are cached ten minutes in a transient whose name is a hash. Uninstall deletes the option.
+
 ## [0.6.0] - 2026-09-28
 
 ### Added

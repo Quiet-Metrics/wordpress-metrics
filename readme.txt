@@ -3,7 +3,7 @@ Contributors: quietmetrics
 Tags: analytics, statistiques, audience, rgpd, privacy
 Requires at least: 5.5
 Tested up to: 6.8
-Stable tag: 0.6.0
+Stable tag: 0.7.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -18,11 +18,14 @@ Quiet Metrics connecte votre site WordPress au service de mesure d'audience Quie
 * **Mode serveur (imblocable)** : les pages vues sont envoyées par PHP en fin de requête, sans JavaScript. Invisible pour les bloqueurs de publicité. Avec la clé secrète, les hits sont signés (HMAC) et le service prend en compte l'IP et le navigateur du visiteur.
 * **Exclusions** : rôles connectés (administrateurs et éditeurs par défaut) et préfixes de chemins (un par ligne).
 * **Exclusion à la demande du visiteur** : une visite sur `?qm_ignore=1` et il cesse d'être compté, `?qm_ignore=0` le remet dans la mesure. Rien à régler : le plugin s'en charge pour les trois modes de collecte.
+* **Widget du tableau de bord** : avec un jeton de lecture, les chiffres des 30 derniers jours (visiteurs par jour cumulés, pages vues, sessions, pages les plus vues) dans le tableau de bord de WordPress, pour les administrateurs.
 * **Événements personnalisés** : qm('inscription', {plan: 'pro'}) côté navigateur, quiet_metrics_event('achat', array('montant' => 49)) côté PHP.
 
 = Service externe =
 
 Ce plugin envoie les données de mesure au service Quiet Metrics configuré dans Réglages > Quiet Metrics (par défaut https://quietmetrics.dev), sur le endpoint /api/v1/collect. Sont transmis : URL de la page vue, referrer, langue, largeur d'écran (mode script), nom et propriétés d'événement, ainsi que l'adresse IP et le User-Agent du visiteur, utilisés par le service pour la déduction technique (visiteur unique, appareil, pays) puis jetés, jamais stockés en clair.
+
+Si un jeton de lecture est renseigné, le widget du tableau de bord interroge aussi l'API de lecture du même service (/api/v1/stats/{clé publique}/summary, /timeseries et /breakdown), côté serveur, avec ce jeton : rien d'autre n'est transmis que la clé publique du site et la période demandée. Les réponses, des chiffres agrégés, sont gardées dix minutes en cache.
 
 Aucune donnée n'est envoyée tant que la clé publique du site n'est pas renseignée dans les réglages. Éditeur : QuietSystems (https://quietsystems.dev). Service : https://quietmetrics.dev.
 
@@ -68,6 +71,9 @@ L'onglet SEO de Quiet Metrics n'explore que les sites qui prouvent appartenir au
 Non : le service déduplique les hits identiques rapprochés (même page, même visiteur, moins de 2 secondes d'écart).
 
 == Changelog ==
+
+= 0.7.0 =
+* Dashboard widget: daily visitors (summed), page views, sessions, trend and top pages over the last 30 days, read server side with a read token kept in its own non-autoloaded option. Shown to users with manage_options (filter: quiet_metrics_dashboard_capability).
 
 = 0.6.0 =
 * SEO crawl: with `QUIET_METRICS_SEO_CRAWL` set to true (wp-config.php constant or environment variable) and the secret key filled in, the plugin serves the ownership proof at /.well-known/quietmetrics.json. Off by default. Embedded PHP SDK 0.6.0.
