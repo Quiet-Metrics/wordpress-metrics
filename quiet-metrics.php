@@ -22,8 +22,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Plancher PHP, le même que l'en-tête « Requires PHP ». WordPress refuse déjà
 // l'activation en dessous, mais pas une copie déposée à la main ni une mise à
 // jour d'un plugin déjà actif : sans ce garde, le SDK embarqué casserait le
-// site au premier appel. Ce fichier doit donc rester lisible par un vieux PHP
-// jusqu'à ce return.
+// site au premier appel. Ce fichier doit donc rester analysable par PHP 7, et
+// rien ne doit être inclus avant ce return (bin/verifier.sh le lint sous php74).
 define( 'QUIET_METRICS_MINIMUM_PHP', '8.3' );
 if ( version_compare( PHP_VERSION, QUIET_METRICS_MINIMUM_PHP, '<' ) ) {
 	add_action(
