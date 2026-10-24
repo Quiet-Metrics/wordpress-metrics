@@ -4,7 +4,7 @@ Tags: analytics, statistiques, audience, rgpd, privacy
 Requires at least: 5.5
 Tested up to: 6.8
 Stable tag: 0.7.0
-Requires PHP: 7.4
+Requires PHP: 8.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,6 +73,7 @@ Non : le service déduplique les hits identiques rapprochés (même page, même 
 == Changelog ==
 
 = 0.7.0 =
+* Breaking: PHP 8.3 minimum (versions below are no longer security-supported). On an older PHP the plugin stays inactive and shows an admin notice.
 * Dashboard widget: daily visitors (summed), page views, sessions, trend and top pages over the last 30 days, read server side with a read token kept in its own non-autoloaded option. Shown to users with manage_options (filter: quiet_metrics_dashboard_capability).
 
 = 0.6.0 =

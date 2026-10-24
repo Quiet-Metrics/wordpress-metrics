@@ -12,7 +12,7 @@ namespace QuietMetrics;
  * (SDK coeur quiet-metrics/php-metrics). Ne pas modifier ici, resynchroniser
  * depuis la source. Zéro dépendance Composer côté utilisateur final.
  *
- * Compatible PHP >= 7.4, zéro dépendance (adoption maximale : mutualisés,
+ * Compatible PHP >= 8.3, zéro dépendance (adoption maximale : mutualisés,
  * WordPress, vieux projets). Spec du payload : docs/05-api-et-sdk.md.
  *
  * Contrat : ne JAMAIS casser le site hôte. Tout échec est silencieux,
@@ -367,14 +367,8 @@ final class Client implements Tracker
             if ($value === null) {
                 continue;
             }
-            // `strpos` et non `str_contains` : ce fichier tient un contrat
-            // « PHP >= 7.4 » (mutualisés, WordPress, vieux projets) et
-            // `str_contains` est arrivé en 8.0. L'écart aurait été MUET :
-            // `send()` avale tout dans un `catch (\Throwable)`, donc un
-            // « Call to undefined function » y aurait simplement arrêté toute
-            // émission, sans erreur visible nulle part.
             $value = strtolower($value);
-            if (strpos($value, 'prefetch') !== false || strpos($value, 'prerender') !== false) {
+            if (str_contains($value, 'prefetch') || str_contains($value, 'prerender')) {
                 return true;
             }
         }
@@ -769,8 +763,5 @@ final class Client implements Tracker
             CURLOPT_NOSIGNAL => true,
         ]);
         @curl_exec($ch);
-        if (PHP_VERSION_ID < 80000) {
-            curl_close($ch); // sans effet et déprécié depuis PHP 8 (handle objet, libéré par le GC)
-        }
     }
 }

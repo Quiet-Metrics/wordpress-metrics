@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ## [0.7.0] - Unreleased
 
+### Changed
+- **Breaking: PHP 8.3 minimum** (versions below are no longer security-supported: PHP 8.1 since 31 December 2025, PHP 8.2 from 31 December 2026). `Requires PHP: 8.3` in the plugin header and `readme.txt`: WordPress marks the update as incompatible and refuses activation on an older PHP. A copy uploaded by hand, or updated outside WordPress, stays inactive there and shows an admin notice instead of breaking the site.
+- Embedded PHP client updated to 0.7.0.
+
 ### Added
 - **Dashboard widget**: daily visitors (summed), page views and sessions over the last 30 days with their change on the previous period, a visitors trend, the five most viewed pages, and a link to Quiet Metrics. Shown to users with `manage_options`, filterable through `quiet_metrics_dashboard_capability`.
 - **Read token** setting, in its own option `quiet_metrics_read_token` (not autoloaded), separate from the collection keys. The field is masked and never prints the saved token; leaving it empty keeps it, a checkbox deletes it. Calls go through `wp_remote_get()` with a five-second timeout, and responses are cached ten minutes in a transient whose name is a hash. Uninstall deletes the option and the widget transients.

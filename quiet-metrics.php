@@ -5,7 +5,7 @@
  * Description:       Mesure d'audience sans cookie de pistage pour WordPress : script first-party, tracking serveur imblocable, ou les deux. Les données de mesure sont envoyées au service Quiet Metrics configuré dans les réglages.
  * Version:           0.7.0
  * Requires at least: 5.5
- * Requires PHP:      7.4
+ * Requires PHP:      8.3
  * Author:            QuietSystems
  * Author URI:        https://quietsystems.dev
  * License:           GPLv2 or later
@@ -17,6 +17,35 @@
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
+}
+
+// Plancher PHP, le même que l'en-tête « Requires PHP ». WordPress refuse déjà
+// l'activation en dessous, mais pas une copie déposée à la main ni une mise à
+// jour d'un plugin déjà actif : sans ce garde, le SDK embarqué casserait le
+// site au premier appel. Ce fichier doit donc rester lisible par un vieux PHP
+// jusqu'à ce return.
+define( 'QUIET_METRICS_MINIMUM_PHP', '8.3' );
+if ( version_compare( PHP_VERSION, QUIET_METRICS_MINIMUM_PHP, '<' ) ) {
+	add_action(
+		'admin_notices',
+		function () {
+			if ( ! current_user_can( 'activate_plugins' ) ) {
+				return;
+			}
+			printf(
+				'<div class="notice notice-error"><p>%s</p></div>',
+				esc_html(
+					sprintf(
+						/* translators: 1: version PHP minimale, 2: version PHP du serveur. */
+						__( 'Quiet Metrics nécessite PHP %1$s ou plus récent, ce serveur utilise PHP %2$s : le plugin reste inactif tant que PHP n\'est pas mis à jour.', 'quiet-metrics' ),
+						QUIET_METRICS_MINIMUM_PHP,
+						PHP_VERSION
+					)
+				)
+			);
+		}
+	);
+	return;
 }
 
 define( 'QUIET_METRICS_VERSION', '0.7.0' );
