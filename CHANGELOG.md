@@ -3,7 +3,7 @@
 All notable changes to the Quiet Metrics WordPress plugin are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org).
 
-## [0.7.0] - Unreleased
+## [0.7.0] - 2026-10-26
 
 ### Changed
 - **Breaking: PHP 8.3 minimum** (versions below are no longer security-supported: PHP 8.1 since 31 December 2025, PHP 8.2 from 31 December 2026). `Requires PHP: 8.3` in the plugin header and `readme.txt`: WordPress marks the update as incompatible and refuses activation on an older PHP. A copy uploaded by hand, or updated outside WordPress, stays inactive there and shows an admin notice instead of breaking the site.
